@@ -129,7 +129,7 @@ for c in plugins/pstack/.codex-plugin/prompts/*.md; do
 done
 ```
 
-Each shortcut invokes its namespaced native-plugin skill. The commands skip existing files and links. Remove a shortcut by deleting its link at `~/.codex/prompts/<name>.md`. Namespaced shortcuts require the native plugin. Skills-only installation uses leaf names, has no hook, and cannot preserve plugin namespace isolation from other skill packages. Prefer native plugins when using Matt's plugin alongside pstack-mod.
+Each shortcut invokes its namespaced native-plugin skill. The commands skip existing files and links. Remove a shortcut by deleting its link at `~/.codex/prompts/<name>.md`. Namespaced shortcuts require the native plugin. Skills-only installation uses leaf names and has no hook or plugin namespace.
 
 ## Configuration and dependencies
 

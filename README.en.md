@@ -28,8 +28,6 @@ codex plugin add pstack-mod@pstack-mod
 
 Start a new session after installation. Invoke `pstack-mod:setup-pstack` to choose runtime-specific models and reasoning effort, or enable automatic routing. Routing defaults to off. Only an explicit `session hook: on` in the runtime's `pstack-mod-models.md` enables it, and model updates preserve that choice. The optional hook requires Node.js 18 or later on PATH. Codex also requires trust through `/hooks`. See [migration, update and rollback](docs/LOCAL_INSTALL.md) before replacing the old plugin.
 
-Matt Pocock's plugin remains separate. Use `pstack-mod:architect` for pstack's design workflow and `mattpocock-skills:code-review` for Matt's review. Prefer native plugin installation to preserve namespaces.
-
 For Prime Agent, OpenCode, Gemini CLI, or skills-only installs for any harness, see [shared installation](docs/reference.md#shared-skills-installation).
 
 ### Try the local checkout

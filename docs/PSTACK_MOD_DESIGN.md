@@ -2,11 +2,11 @@
 
 ## Problem
 
-The personal port must coexist with Matt Pocock's plugin in Codex and Claude Code. Both existing manifests call this plugin `pstack`, its Codex prompts invoke bare skill names, and its hook executes a shell script that enables routing when no setting exists. The upstream conversion boundary must remain recognizable.
+The personal port provides its own workflow skills for Codex and Claude Code. The imported manifests used the name `pstack`, the Codex prompts invoked bare skill names, and the hook executed a shell script that enabled routing when no setting existed. The upstream conversion boundary must remain recognizable.
 
 ## Usage
 
-The user selected display name `pstack-mod` and namespace `pstack-mod` on 2026-10-02. Both marketplaces use `pstack-mod`. Invoke `pstack-mod:architect` or `mattpocock-skills:code-review` explicitly. Leaf skill names and the physical `plugins/pstack` directory stay stable.
+The user selected display name `pstack-mod` and namespace `pstack-mod` on 2026-10-02. Both marketplaces use `pstack-mod`. Invoke its skills explicitly, for example `pstack-mod:architect`. Leaf skill names and the physical `plugins/pstack` directory stay stable.
 
 Run `pstack-mod:setup-pstack` to configure models or routing. The runtime's `pstack-mod-models.md` contains `session hook: off` by default. Only a single explicit `session hook: on` enables routing. Reconfiguration preserves an existing valid choice unless the user asks to change it. Model-only changes preserve the choice. Hook-only changes preserve the model rows.
 
@@ -67,7 +67,7 @@ The identity source is shipped at `plugins/pstack/identity.json` so the hook can
 
 ## Open work
 
-Repository visibility, scheduled sync PR automation, model routing refinements, and first-release skill curation remain separate decisions. GitHub repository creation and push are explicitly deferred.
+Scheduled sync PR automation, model routing refinements, and skill curation remain separate decisions. The user created the public repository and authorized the first push, which is complete.
 
 ## Sources
 

@@ -95,7 +95,7 @@ The role lines are the same everywhere. What differs is the sheet path, how the 
 | Runtime | Sheet | Load | List models | Status |
 | --- | --- | --- | --- | --- |
 | Claude Code | `<config>/pstack-mod-models.md` | `@<config>/pstack-mod-models.md` in `<config>/CLAUDE.md` | the `Agent` tool's model parameter | manifest and exec launcher checked; pstack-mod interactive setup pending |
-| Codex | `<codex-home>/pstack-mod-models.md` | model rows: paste into `<codex-home>/AGENTS.md`; hook setting: read by the plugin | your configured Codex models, see [codex-tools.md](../poteto-mode/references/codex-tools.md#model-names) | launcher and isolated CLI install checked; pstack-mod interactive setup and dual-plugin discovery pending |
+| Codex | `<codex-home>/pstack-mod-models.md` | model rows: paste into `<codex-home>/AGENTS.md`; hook setting: read by the plugin | your configured Codex models, see [codex-tools.md](../poteto-mode/references/codex-tools.md#model-names) | launcher and isolated CLI install checked; pstack-mod interactive setup and discovery pending |
 | opencode | `~/.config/opencode/pstack-mod-models.md` | add the path to the `instructions` array in `opencode.json` | the `models` slash command in the session | from published docs, no live session |
 | Gemini CLI | `~/.gemini/pstack-mod-models.md` | `@~/.gemini/pstack-mod-models.md` in `~/.gemini/GEMINI.md` | the `model` slash command in the session | from published docs, no live session |
 | Prime Agent | no documented sheet path; Prime's configuration chooses models | | | no live session |

@@ -28,8 +28,6 @@ codex plugin add pstack-mod@pstack-mod
 
 インストール後は新しいセッションを開始し、`pstack-mod:setup-pstack` で各環境のモデルや推論の強さを設定します。自動ルーティングの初期状態は無効です。各環境の `pstack-mod-models.md` に `session hook: on` を明示すると有効になり、モデル設定の更新時もその選択を保持します。任意フックの実行には PATH 上の Node.js 18 以降が必要です。Codex では `/hooks` での信頼確認も必要です。旧プラグインから切り替える場合は、[移行・更新・ロールバックの手順](docs/LOCAL_INSTALL.md)を確認してください。
 
-Matt Pocock のスキルは別プラグインとして使います。たとえば、設計には `pstack-mod:architect`、Matt のレビューには `mattpocock-skills:code-review` を指定できます。名前空間を保つため、両方を使う場合はプラグインとしてのインストールを推奨します。
-
 Prime Agent、OpenCode、Gemini CLI、またはスキルだけを導入する場合は、[共通の導入手順](docs/reference.md#shared-skills-installation)を参照してください。
 
 ### ローカルの作業フォルダから試す

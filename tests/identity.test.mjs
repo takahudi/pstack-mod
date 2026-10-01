@@ -18,10 +18,10 @@ describe("personal plugin identity", () => {
     expect(text).not.toContain("Invoke the `tdd` skill");
   });
   test("conversion preserves third-party IDs, attribution and upstream locations", () => {
-    const source = "pstack:architect pstack:effort-high pstack-models.md mattpocock-skills:code-review\n" +
+    const source = "pstack:architect pstack:effort-high pstack-models.md example-skills:code-review\n" +
       "Original pstack by Lauren Tan. https://github.com/cursor/plugins/tree/main/pstack\n";
     const result = adaptIdentity(source, identity);
-    expect(result).toBe("pstack-mod:architect pstack-mod:effort-high pstack-mod-models.md mattpocock-skills:code-review\n" +
+    expect(result).toBe("pstack-mod:architect pstack-mod:effort-high pstack-mod-models.md example-skills:code-review\n" +
       "Original pstack by Lauren Tan. https://github.com/cursor/plugins/tree/main/pstack\n");
     expect(adaptIdentity(result, identity)).toBe(result);
     expect(adaptIdentity("other-pstack:architect other-pstack-models.md", identity)).toBe("other-pstack:architect other-pstack-models.md");

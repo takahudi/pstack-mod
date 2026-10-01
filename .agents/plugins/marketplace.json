@@ -1,11 +1,11 @@
 {
-  "name": "pstack-claude",
+  "name": "pstack-mod",
   "interface": {
-    "displayName": "pstack"
+    "displayName": "pstack-mod"
   },
   "plugins": [
     {
-      "name": "pstack",
+      "name": "pstack-mod",
       "source": {
         "source": "local",
         "path": "./plugins/pstack"
@@ -13,7 +13,9 @@
       "policy": {
         "installation": "AVAILABLE",
         "authentication": "ON_INSTALL",
-        "products": ["CODEX"]
+        "products": [
+          "CODEX"
+        ]
       },
       "category": "Developer Tools"
     }

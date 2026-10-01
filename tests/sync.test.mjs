@@ -1210,10 +1210,11 @@ describe("sync CLI", () => {
     const newSha = commit(newText);
 
     const port = join(root, "port");
-    for (const file of ["sync.mjs", "generate.mjs", "validate-skills.mjs", "substitutions.json"]) {
+    for (const file of ["sync.mjs", "generate.mjs", "identity.mjs", "validate-skills.mjs", "substitutions.json"]) {
       cpSync(join(import.meta.dir, "../tools", file), join(port, "tools", file));
     }
     cpSync(join(import.meta.dir, "../plugins/pstack/models.json"), join(port, "plugins/pstack/models.json"));
+    cpSync(join(import.meta.dir, "../plugins/pstack/identity.json"), join(port, "plugins/pstack/identity.json"));
     mkdirSync(join(port, "plugins/pstack/skills"));
     writeFileSync(join(port, "plugins/pstack/skills/s.md"), localText);
     const codexTools = join(port, "plugins/pstack/skills/poteto-mode/references/codex-tools.md");

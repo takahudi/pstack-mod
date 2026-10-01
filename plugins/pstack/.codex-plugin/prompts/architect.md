@@ -4,4 +4,4 @@ description: settle types and module shape before writing code that crosses a fu
 disable-model-invocation: true
 ---
 
-Invoke the `architect` skill and follow it.
+Invoke the `pstack-mod:architect` skill and follow it.

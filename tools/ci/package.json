@@ -1,0 +1,7 @@
+{
+  "name": "pstack-mod-ci-tools",
+  "private": true,
+  "dependencies": {
+    "@openai/codex": "0.159.3"
+  }
+}

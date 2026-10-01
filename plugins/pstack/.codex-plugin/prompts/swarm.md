@@ -4,4 +4,4 @@ description: fan out N parallel workers across slices or races, then return one 
 disable-model-invocation: true
 ---
 
-Invoke the `swarm` skill and follow it.
+Invoke the `pstack-mod:swarm` skill and follow it.

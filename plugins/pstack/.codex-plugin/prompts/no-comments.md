@@ -4,4 +4,4 @@ description: strip comments before review, fix the accepted findings, encode cla
 disable-model-invocation: true
 ---
 
-Invoke the `no-comments` skill and follow it.
+Invoke the `pstack-mod:no-comments` skill and follow it.

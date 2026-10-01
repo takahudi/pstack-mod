@@ -216,7 +216,10 @@ describe("manifests", () => {
   test("the plugin and marketplace manifests agree on every fact they repeat", () => {
     const shared = ({ name, author, homepage, repository, license, keywords }) =>
       ({ name, author, homepage, repository, license, keywords });
-    expect(Object.values(shared(claude))).not.toContain(undefined);
+    expect([claude.name, claude.author, claude.homepage, claude.license, claude.keywords]).not.toContain(undefined);
+    expect(claude.author.name).toBe("takahudi");
+    expect(claude.repository).toBe("https://github.com/takahudi/pstack-mod");
+    expect(codex.repository).toBe(claude.repository);
     expect(shared(codex)).toEqual(shared(claude));
     expect(claudeMarketplace.owner).toEqual(claude.author);
     expect(claudeMarketplace.plugins.map(({ name, source }) => [name, source])).toEqual([[claude.name, "./plugins/pstack"]]);
@@ -464,7 +467,7 @@ describe("lead lines", () => {
     const pointer = "through `poteto-mode/references/codex-tools.md`, including its Per-skill notes.";
     expect(promptStub({ name: "tdd", menu: "m" }, { preamble: false })).toContain(pointer);
     expect(promptStub({ name: "how", menu: "m" }, { preamble: true })).toBe(
-      "---\nname: how\ndescription: m\ndisable-model-invocation: true\n---\n\nInvoke the `how` skill and follow it.\n",
+      "---\nname: how\ndescription: m\ndisable-model-invocation: true\n---\n\nInvoke the `pstack:how` skill and follow it.\n",
     );
   });
 
@@ -549,7 +552,7 @@ describe("plan, changes, apply", () => {
   };
   const repoCopy = () => {
     const dir = scratch("pstack-generate-");
-    cpSync(repoRoot, dir, { recursive: true, filter: (src) => ![".git", "node_modules"].includes(basename(src)) });
+    cpSync(repoRoot, dir, { recursive: true, filter: (src) => ![".git", ".local-tools", "node_modules"].includes(basename(src)) });
     return dir;
   };
   const snapshot = (dir) => Object.fromEntries(walk(dir).map((path) => [path, readFileSync(path, "utf8")]));

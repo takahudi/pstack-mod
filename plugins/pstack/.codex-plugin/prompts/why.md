@@ -4,4 +4,4 @@ description: investigate why something was built this way (parallel multi-MCP ev
 disable-model-invocation: true
 ---
 
-Invoke the `why` skill and follow it.
+Invoke the `pstack-mod:why` skill and follow it.

@@ -31,11 +31,11 @@ Without it, `spawn_agent` is unavailable and the fan-out skills (`interrogate`, 
 
 ## Subagent policy
 
-poteto-mode's Subagents section sets Claude-specific defaults (`subagent_type: "pstack:poteto-agent"`, `run_in_background: true`). On Codex:
+poteto-mode's Subagents section sets Claude-specific defaults (`subagent_type: "pstack-mod:poteto-agent"`, `run_in_background: true`). On Codex:
 
 - There is no `poteto-agent` subagent type. Route an ad-hoc subagent through poteto-mode's style by dispatching a `spawn_agent` whose instructions tell it to read the `poteto-mode` skill in full first.
 - `spawn_agent` calls already run concurrently with your turn, so `run_in_background: true` has no separate flag. Issue the dispatch and continue.
-- There are no `pstack:effort-<level>` or `pstack:poteto-agent-<level>` types. When a role value carries `@<level>`, or the `default effort` line names a level, pass that level as `spawn_agent`'s `reasoning_effort` and keep the dispatch otherwise unchanged. `session` passes no `reasoning_effort`.
+- There are no `pstack-mod:effort-<level>` or `pstack-mod:poteto-agent-<level>` types. When a role value carries `@<level>`, or the `default effort` line names a level, pass that level as `spawn_agent`'s `reasoning_effort` and keep the dispatch otherwise unchanged. `session` passes no `reasoning_effort`.
 - There is no `comment-sicko` subagent type either. The **no-comments** skill spawns it on Claude Code; on Codex dispatch a `spawn_agent` whose instructions tell it to read `poteto-mode/references/agents/comment-sicko.md` in full first.
 - Claude Code runs every subagent on this machine, so the **swarm** skill's workers and the fan-out playbooks (`orchestrate`, `autopilot-full`, `autopilot-stack`) isolate writers with worktrees. The same holds on Codex.
 - Keep the rest of the policy unchanged. Pass file pointers not inlined context, give each worker its own worktree or branch when they write, review every subagent's diff yourself.
@@ -52,7 +52,7 @@ Skills name Claude defaults (a single-role default for code/prose/judgment plus 
 
 ## Session routing hook
 
-The native pstack plugin bundles the same `SessionStart` routing hook as the Claude Code plugin. Codex runs it on startup, resume, clear, and compact after the user trusts the hook through `/hooks`. The hook reads `session hook` from the Codex sheet, at the path in [setup-pstack's runtime table](../../setup-pstack/SKILL.md#other-runtimes); `session hook: off` disables injection.
+The native plugin bundles the same optional Node.js `SessionStart` routing hook as the Claude Code plugin. Codex runs it on startup, resume, clear, and compact after the user trusts the hook through `/hooks`, provided host hooks are enabled. The hook reads `session hook` from the Codex sheet at the path in [setup-pstack's runtime table](../../setup-pstack/SKILL.md#other-runtimes). Routing defaults to off; only a single explicit `session hook: on` enables injection. Node.js 18 or later must be on PATH. The Windows command override uses PowerShell. The hook does not write files or access the network. Explicit `pstack-mod:poteto-mode` invocation works while routing is off.
 
 A skills-only installation does not include plugin hooks. Request `poteto-mode` explicitly or add a standing instruction to `AGENTS.md` in that case.
 

@@ -49,7 +49,7 @@ The generator rejects missing Markdown links, links outside the skills tree, and
 - No `commands/` directory.
 - No `disable-model-invocation` on a skill.
 - Every `principle-*` leaf sets `user-invocable: false`.
-- Plugin agents use their namespaced `pstack:<name>` names.
+- Plugin agents use their namespaced `pstack-mod:<name>` names.
 
 CI runs `bun tools/generate.mjs --check`, which writes nothing and fails naming each generated file that is stale, missing, or orphaned, so commit the generator's output. Run the same command locally to preview CI. It checks your working tree, not the commit, so a gitignored file such as `.DS_Store` in a generated directory fails only locally, and uncommitted regenerated output passes only locally. `.pre-commit-config.yaml` runs the same command before each commit once you run `prek install` (or `pre-commit install`) in your clone.
 
@@ -87,7 +87,7 @@ uvx zizmor@1.29.0 --persona pedantic --min-severity low --collect all -- .
 
 ## Things that will fail CI
 
-- **A `plugins/pstack/commands/` directory.** Claude Code renders commands and user-invocable skills in the same slash menu, so a trampoline paired with its skill duplicates every `/pstack:<name>` row ([#22](https://github.com/michael-denyer/pstack-claude/issues/22)). Codex stubs live in `plugins/pstack/.codex-plugin/prompts/`. An upstream sync will try to reintroduce `commands/`; move any new stubs across.
+- **A `plugins/pstack/commands/` directory.** Claude Code renders commands and user-invocable skills in the same slash menu, so a trampoline paired with its skill duplicates every `/pstack-mod:<name>` row ([#22](https://github.com/michael-denyer/pstack-claude/issues/22)). Codex stubs live in `plugins/pstack/.codex-plugin/prompts/`. An upstream sync will try to reintroduce `commands/`; move any new stubs across.
 - **`disable-model-invocation` in a skill's frontmatter.** On a skill it makes the Skill tool refuse the invocation outright, which breaks the SessionStart mandate. The `principle-*` leaves use `user-invocable: false` instead.
 - **Stale generated output.** The `Generated files current` job runs `bun tools/generate.mjs --check`, which fails naming each generated file to write or orphan to remove. Editing `VERSION` without regenerating, hand-editing a manifest's `version` field, or bumping without a matching `CHANGES.md` heading all land here. The same run validates `hooks/hooks.json` and the Codex hooks file `.codex-plugin/plugin.json` names: every `${CLAUDE_PLUGIN_ROOT}` path a command names must exist in the plugin.
 - **An unresolved sync conflict.** `bun tools/generate.mjs` fails on any line under `plugins/pstack` that starts with seven `<`, `=`, or `>` followed by a space or the line end, and names the file and line. A sync writes these markers for every text conflict.

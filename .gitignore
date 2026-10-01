@@ -1,6 +1,10 @@
 # Session-local Claude Code state — not part of the plugin
 .remember/
 
+# Local verification tools and isolated host profiles
+.local-tools/
+tools/ci/node_modules/
+
 # OS / editor
 .DS_Store
 *.swp

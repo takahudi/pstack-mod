@@ -1,4 +1,4 @@
-# pstack
+# pstack-mod
 
 Lauren Tan's [pstack](https://github.com/cursor/plugins/tree/main/pstack) is an opinionated skill stack that improves agent outcomes. This is the port for Claude Code, Codex, and other agent harnesses: the same skills, with Cursor primitives translated to each runtime's tools.
 
@@ -6,9 +6,9 @@ Tell `poteto-mode` your goal and it invokes the workflow that fits: reproduce an
 
 ## What it contains
 
-- Skills: Markdown instructions the agent reads. Public ones appear as `/pstack:<name>` slash commands.
-- Agents: `pstack:poteto-agent` and `pstack:comment-sicko`, plus one agent per reasoning-effort level.
-- A SessionStart hook that injects the poteto-mode routing mandate unless your `pstack-models.md` sheet turns it off.
+- Skills: Markdown instructions the agent reads. Public ones appear as `/pstack-mod:<name>` slash commands.
+- Agents: `pstack-mod:poteto-agent` and `pstack-mod:comment-sicko`, plus one agent per reasoning-effort level.
+- An optional Node.js SessionStart hook, disabled until your runtime's `pstack-mod-models.md` has a single `session hook: on` line.
 - Local scripts for watching and shipping pull requests, orchestrating multi-phase plans, and auditing worktrees.
 
 ## Data handling

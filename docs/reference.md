@@ -4,7 +4,7 @@ Start with the [README](../README.md) for installation and your first task.
 
 ## Slash commands
 
-The package includes 54 skill directories: 31 public skills and 23 `principle-*` references. Claude Code uses `/pstack:<name>`. In Codex, request a skill by name or install the [optional shortcuts](#codex) for the `/name` form below.
+The package includes 54 skill directories: 31 public skills and 23 `principle-*` references. Claude Code uses `/pstack-mod:<name>`. In Codex, request a skill by name or install the [optional shortcuts](#codex) for the `/name` form below.
 
 Find each skill's instructions in the [skills tree](../plugins/pstack/skills/).
 
@@ -58,7 +58,7 @@ These checks cover skill discovery. Delegation and multi-model workflows remain 
 
 ### Automatic routing
 
-The Claude Code and Codex plugins share a [SessionStart hook](../plugins/pstack/hooks/session-start.sh) that loads a short [routing instruction](../plugins/pstack/hooks/session-start-context.md) on startup, resume, clear, and compact. Codex requires the user to trust plugin hooks through `/hooks`. The instruction invokes `poteto-mode` when a task meets any of these conditions:
+The Claude Code and Codex plugins share an optional [Node SessionStart hook](../plugins/pstack/hooks/session-start.mjs) that loads a short [routing instruction](../plugins/pstack/hooks/session-start-context.md) on startup, resume, clear, and compact when enabled. It requires Node.js 18 or later on PATH. Claude Code launches it directly with an argument array; Codex uses a Windows command override. Codex requires the user to trust plugin hooks through `/hooks`. The instruction invokes `poteto-mode` when a task meets any of these conditions:
 
 - It touches more than one file or changes a signature other files call.
 - It involves a design or architecture choice.
@@ -66,7 +66,7 @@ The Claude Code and Codex plugins share a [SessionStart hook](../plugins/pstack/
 
 Smaller tasks proceed directly. The full skill loads when invoked, and explicit user instructions take precedence.
 
-To disable routing, run `setup-pstack` and turn off the session hook. In Claude Code, use `/pstack:setup-pstack`. You can also write `session hook: off` in the runtime's sheet, at the path in [setup-pstack's runtime table](../plugins/pstack/skills/setup-pstack/SKILL.md#other-runtimes). The hook reads that setting before injecting its instruction. Without the setting, routing stays on.
+Routing defaults to off. Use `pstack-mod:setup-pstack` to enable it, or write a single `session hook: on` in the runtime's sheet at the path in [setup-pstack's runtime table](../plugins/pstack/skills/setup-pstack/SKILL.md#other-runtimes). Off, missing, invalid and duplicate entries produce no routing context. Host trust and disabled states still apply. The hook performs no network requests or file writes, and it never reads the old plugin's sheet as a fallback.
 
 Skills-only installs and other runtimes do not include the hook. Request `poteto-mode` explicitly, or add a standing instruction to the runtime's instruction file.
 
@@ -75,8 +75,8 @@ Skills-only installs and other runtimes do not include the hook. Request `poteto
 Use this path for Prime Agent, opencode, Gemini CLI, or a skills-only Codex installation. Clone the repository and link its skills into `~/.agents/skills/`:
 
 ```shell
-git clone https://github.com/michael-denyer/pstack-claude
-cd pstack-claude
+git clone https://github.com/takahudi/pstack-mod.git
+cd pstack-mod
 mkdir -p ~/.agents/skills
 for s in plugins/pstack/skills/*/; do
   target=~/.agents/skills/"$(basename "$s")"
@@ -94,23 +94,23 @@ To update, pull changes in the clone that the links point to. To uninstall a lin
 
 ### Install with the skills CLI
 
-To install without keeping a local clone:
+To copy this checkout's skills:
 
 ```shell
-npx skills add https://github.com/michael-denyer/pstack-claude/tree/main/plugins/pstack/skills --skill "*" --agent "*" --yes
+npx skills add ./plugins/pstack/skills --skill "*" --agent "*" --yes
 ```
 
 The [CI installation check](../.github/workflows/ci.yml) uses the skills CLI to copy the checkout's skill tree and compare the installed files with their sources.
 
 ### Codex
 
-The [native plugin manifest](../plugins/pstack/.codex-plugin/plugin.json) points to the shared skills directory and the Codex [SessionStart hook](../plugins/pstack/hooks/codex-hooks.json). The [marketplace catalog](../.agents/plugins/marketplace.json) lists `pstack` in the `pstack-claude` marketplace. Review and trust the hook through `/hooks`; Codex asks again when its definition changes.
+The [native plugin manifest](../plugins/pstack/.codex-plugin/plugin.json) points to the shared skills directory and the Codex [SessionStart hook](../plugins/pstack/hooks/codex-hooks.json). The [marketplace catalog](../.agents/plugins/marketplace.json) lists `pstack-mod` in the `pstack-mod` marketplace. Review and trust the hook through `/hooks` if enabling routing; Codex asks again when its definition changes.
 
-The [README installation](../README.md#codex) registers that catalog with `codex plugin marketplace add`, then installs the plugin with `codex plugin add`. These commands match the help output from `codex-cli 0.154.0-alpha.6.2`. A fresh native installation was not tested for this documentation change.
+The [README installation](../README.md#codex) registers `takahudi/pstack-mod` as a GitHub marketplace with `codex plugin marketplace add`, then installs the plugin with `codex plugin add`. Local-checkout commands are also included. These commands match the installed `codex-cli 0.159.3`. See [verification and migration](LOCAL_INSTALL.md) for the limits of the host checks.
 
 OpenAI documents [marketplace registration and the plugin format](https://developers.openai.com/plugins/build/plugins#add-a-marketplace-from-the-cli). If your CLI lacks `plugin add`, use the plugin browser after registering the marketplace, or use the [skills-only installation](#shared-skills-installation).
 
-Request `poteto-mode` by name or select its entry, such as `pstack:poteto-mode`. To enable parallel subagents:
+Request `poteto-mode` by name or select its entry, such as `pstack-mod:poteto-mode`. To enable parallel subagents:
 
 ```toml
 [features]
@@ -129,7 +129,7 @@ for c in plugins/pstack/.codex-plugin/prompts/*.md; do
 done
 ```
 
-Each shortcut invokes its skill. The commands skip existing files and links. Remove a shortcut by deleting its link at `~/.codex/prompts/<name>.md`. Both native-plugin and skills-only installations work without these shortcuts.
+Each shortcut invokes its namespaced native-plugin skill. The commands skip existing files and links. Remove a shortcut by deleting its link at `~/.codex/prompts/<name>.md`. Namespaced shortcuts require the native plugin. Skills-only installation uses leaf names, has no hook, and cannot preserve plugin namespace isolation from other skill packages. Prefer native plugins when using Matt's plugin alongside pstack-mod.
 
 ## Configuration and dependencies
 
@@ -203,4 +203,4 @@ Cursor-specific automations, sticky-mode metadata, the Grok Bot UI workflow, and
 
 For skill changes, follow the [sync boundary](../CONTRIBUTING.md#the-sync-boundary). Workflow changes usually belong upstream; runtime adaptations belong here.
 
-See the [license summary](../README.md#license) for licenses and full-plugin attribution. [NOTICE-skills.md](../NOTICE-skills.md) is the notice for skills-only installations.
+See the [license summary](../README.en.md#license) for licenses and full-plugin attribution. [NOTICE-skills.md](../NOTICE-skills.md) is the notice for skills-only installations.

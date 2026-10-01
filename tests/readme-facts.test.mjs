@@ -9,7 +9,7 @@ import { fileURLToPath } from "node:url";
 import { agentSkills, publicSkills } from "../tools/generate.mjs";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
-const documentation = ["README.md", "docs/reference.md"]
+const documentation = ["README.md", "README.en.md", "docs/reference.md"]
   .map((file) => readFileSync(join(repoRoot, file), "utf8"))
   .join("\n");
 const skillsDir = join(repoRoot, "plugins/pstack/skills");

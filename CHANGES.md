@@ -2,6 +2,16 @@
 
 This file is the release changelog, with one `## <version> - <title>` entry per release, newest first. The Cursor-to-Claude rewrite rules live in [`tools/substitutions.json`](tools/substitutions.json), and the [sync boundary](CONTRIBUTING.md#the-sync-boundary) in `CONTRIBUTING.md` defines which changes belong upstream.
 
+## 0.1.0 - pstack-mod local preview
+
+The default repository README is Japanese, with a linked English README. Both document installation from the `takahudi/pstack-mod` GitHub marketplace and from a local checkout. Plugin metadata points at the user's repository.
+
+Personal changes: the plugin and marketplace use `pstack-mod`, with `pstack-mod` as the display name. Generated calls and runtime model-sheet references use the personal namespace. The shared generator and sync derivation apply this adaptation while retaining upstream paths and attribution. Codex shortcuts now invoke qualified skills to avoid selecting another plugin's same-named skill.
+
+Automatic routing is optional and defaults to off. Both hosts launch one read-only Node.js hook. Claude uses exec-form arguments; Codex has a PowerShell Windows override. Only a single explicit on setting enables routing. Setup preserves valid existing choices, and the old plugin's model sheet is not an implicit fallback. Focused namespace and hook checks run on Windows in CI. LF checkout rules and POSIX logical paths fix Windows generation and derivation failures.
+
+Upstream content: this preview starts from Michael Denyer's port `deb5c3d71e5e3b6d91c08f9696a268d7a994be97`, version `0.9.55`, with Cursor pstack pinned to `12d587d` and cursor-team-kit pinned to `e46364b8be46000b7df0f260550cd712afbb8d36`. No new upstream content was imported. The historical port entries below retain their original version numbers.
+
 ## 0.9.55 - effort agent frontmatter that strict YAML reads
 
 The five `poteto-agent-<level>` effort agents wrote their `description` unquoted and opening with a backtick, which a YAML plain scalar cannot start with. Claude Code's loader tolerated it, but `Bun.YAML.parse` and PyYAML reject the block, so a strict reader could not read those agents' frontmatter. The description now opens with `Runs`, and `tests/generate.test.mjs` parses every generated effort agent's frontmatter.

@@ -1,14 +1,12 @@
 {
-  "name": "pstack",
-  "version": "0.9.55",
-  "description": "if you want to go fast, go deep first. pstack helps you write less, but higher quality code. rigorous agent workflows you can parallelize with confidence. Codex port of the Claude Code plugin; skills are shared, tool names resolve via skills/poteto-mode/references/codex-tools.md. Original pstack by Lauren Tan (poteto).",
+  "name": "pstack-mod",
+  "version": "0.1.0",
+  "description": "pstack-mod is takahudi's personal pstack port for Codex and Claude Code. Original pstack by Lauren Tan; host adaptation based on Michael Denyer's port. Design, implementation, verification and review workflows with explicit namespaced invocation and optional routing.",
   "author": {
-    "name": "Michael Denyer",
-    "email": "mdenyer@gmail.com",
-    "url": "https://github.com/michael-denyer"
+    "name": "takahudi",
+    "url": "https://github.com/takahudi"
   },
-  "homepage": "https://github.com/michael-denyer/pstack-claude",
-  "repository": "https://github.com/michael-denyer/pstack-claude",
+  "homepage": "https://github.com/takahudi/pstack-mod",
   "license": "MIT",
   "keywords": [
     "pstack",
@@ -31,10 +29,10 @@
   "skills": "./skills/",
   "hooks": "./hooks/codex-hooks.json",
   "interface": {
-    "displayName": "pstack",
+    "displayName": "pstack-mod",
     "shortDescription": "Rigorous, parallelizable agent workflows: go deep first, write less, verify everything",
-    "longDescription": "pstack guides agent work through poteto-mode's principles, parallel design exploration (architect/arena), adversarial multi-model review (interrogate), root-cause debugging, prose deslopping, and verified delivery. Skills are shared with the Claude Code build; on Codex, tool names resolve via the codex-tools mapping.",
-    "developerName": "Michael Denyer (port of Lauren Tan's pstack)",
+    "longDescription": "pstack-mod is takahudi's personal pstack port for Codex and Claude Code. Original pstack by Lauren Tan; host adaptation based on Michael Denyer's port. Design, implementation, verification and review workflows with explicit namespaced invocation and optional routing.",
+    "developerName": "takahudi, based on Lauren Tan's pstack and Michael Denyer's port",
     "category": "Developer Tools",
     "capabilities": [
       "Interactive",
@@ -45,9 +43,10 @@
       "Work on this in poteto-mode.",
       "Interrogate this diff with multiple models."
     ],
-    "websiteURL": "https://github.com/michael-denyer/pstack-claude",
+    "websiteURL": "https://github.com/takahudi/pstack-mod",
     "brandColor": "#7C3AED",
     "composerIcon": "./assets/pstack-icon.png",
     "logo": "./assets/pstack-icon.png"
-  }
+  },
+  "repository": "https://github.com/takahudi/pstack-mod"
 }

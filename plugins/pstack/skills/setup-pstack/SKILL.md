@@ -7,6 +7,8 @@ description: Configure which models pstack uses per role. Detects available mode
 
 On Codex, read the [platform mapping](../poteto-mode/references/codex-tools.md), including its per-skill notes, before following this skill.
 
+For a request that changes only automatic routing, resolve the current runtime's sheet using [Other runtimes](#other-runtimes), read it if present, and update only the `session hook` line to the requested on/off value. Preserve all model rows, verify the saved choice, report the path and host trust requirement, then stop. Model detection and role confirmation apply to model configuration requests.
+
 On another runtime, read [Other runtimes](#other-runtimes) below for where the sheet lives and how it loads; the steps are the same.
 
 Write the current runtime's per-role model override sheet, using the path in [Other runtimes](#other-runtimes). Each pstack skill names a default model inline; the override sheet adapts those defaults to the models you actually have access to.
@@ -14,7 +16,7 @@ Write the current runtime's per-role model override sheet, using the path in [Ot
 Claude Code has no auto-applied "rules" mechanism like Cursor's `.mdc`. The Claude Code config directory is `$CLAUDE_CONFIG_DIR` when that variable is set and `~/.claude` otherwise. This skill calls it `<config>`. Inclusion is explicit: the user adds a line to `<config>/CLAUDE.md` (or their project `CLAUDE.md`) such as:
 
 ```text
-@<config>/pstack-models.md
+@<config>/pstack-mod-models.md
 ```
 
 with `<config>` written as the resolved path, so the file is loaded as context for every session.
@@ -29,7 +31,7 @@ Enumerate the model names the `Agent` tool's `model` parameter accepts in this s
 
 ### 2. Load current state
 
-The default role-to-model mapping is the rule shape shown in the Write the override sheet step below. If the current runtime's sheet already exists, read it and treat its values as the current choices. Otherwise start from those defaults. A line whose role is not in that shape, such as `how critics`, is from a retired role. Drop it. An older sheet may name full model IDs that start with `claude-`, which the `Agent` tool rejects. Replace each with its family name, the word after `claude-`.
+The default role-to-model mapping is the rule shape shown in the Write the override sheet step below. If the current runtime's sheet already exists, read it and treat its values as the current choices. Otherwise start from those defaults. Preserve a single valid `session hook: on` or `session hook: off` as the existing hook choice. Missing, invalid, or duplicate entries default to off. Read only this plugin's sheet. Import an older plugin's sheet only when the user requests migration, and ask separately before enabling routing. A line whose role is not in that shape, such as `how critics`, is from a retired role. Drop it. On Claude Code, an older sheet may name full model IDs that start with `claude-`, which the `Agent` tool rejects. Replace each with its family name, the word after `claude-`. On Codex, retain only available OpenAI model slugs or parent aliases.
 
 ### 3. Map and confirm
 
@@ -39,7 +41,7 @@ Then ask for the default reasoning effort, the `default effort` line. It is `ses
 
 ### 4. Choose whether the session hook routes tasks
 
-On Claude Code and Codex, the plugin's `SessionStart` hook injects the poteto-mode mandate on startup, resume, clear, and compact. Codex asks the user to trust plugin hooks through `/hooks` before running them. Ask whether to keep the hook. The default is on. The answer is the `session hook` line in the current runtime's sheet: `on` or `off`. With no sheet or no line, the hook injects. The line is inert on other runtimes.
+On Claude Code and Codex, the plugin's optional `SessionStart` hook injects the poteto-mode mandate on startup, resume, clear, and compact. It requires Node.js 18 or later on PATH. Codex asks the user to trust plugin hooks through `/hooks` before running them. The default is off. Enable it only when the user chooses automatic routing. Preserve an existing valid choice during model-only updates. Record `session hook: on` or `session hook: off` in the current runtime's sheet. Only a single explicit on line enables injection. The line is inert on other runtimes. Host trust and hook disable controls still apply when the sheet says on. Explicit namespaced skill invocation works with routing off.
 
 ### 5. Validate
 
@@ -47,12 +49,12 @@ Every real slug written must be in the detected set. `inherit-parent` and `auto`
 
 ### 6. Write the override sheet
 
-Write the current runtime's sheet with the shape below. Overwrite the whole file so re-runs stay idempotent.
+Write the current runtime's sheet with the shape below, substituting the user's existing or newly chosen hook value for the template's off. Overwrite the whole file so re-runs stay idempotent. Verify that the saved hook line matches the selected value. For a hook-only request, update only that line, preserve all model rows, and skip model detection and role confirmation.
 
 ```markdown
 # pstack model configuration
 
-Per-role model overrides for pstack skills. Each pstack SKILL.md names its defaults in a Models section; the values here override those defaults. Delete a line to fall back to the skill default. A value of `inherit-parent` or `auto` runs that role on the parent session's model (the `Agent` call omits `model`); an alias entry in a panel list still counts toward that panel's fan-out. A model may carry a reasoning effort, as in `opus @xhigh` (levels: low, medium, high, xhigh, max); the role then runs through the pstack effort agent of that level, each entry of a panel list on its own. `default effort` sets the level for a value without one; `session` keeps the parent session's effort. `session hook: off` stops the Claude Code or Codex SessionStart hook from injecting the poteto-mode mandate; any other value, or no line, leaves it on.
+Per-role model overrides for pstack skills. Each pstack SKILL.md names its defaults in a Models section; the values here override those defaults. Delete a line to fall back to the skill default. A value of `inherit-parent` or `auto` runs that role on the parent session's model (the `Agent` call omits `model`); an alias entry in a panel list still counts toward that panel's fan-out. A model may carry a reasoning effort, as in `opus @xhigh` (levels: low, medium, high, xhigh, max); the role then runs through the pstack effort agent of that level, each entry of a panel list on its own. `default effort` sets the level for a value without one; `session` keeps the parent session's effort. Only a single explicit `session hook: on` enables the Claude Code or Codex SessionStart hook. Off, missing, invalid, or duplicate settings leave routing disabled. Preserve the existing valid choice when updating models.
 
 feature, refactoring: opus
 bug-fix: fable
@@ -73,14 +75,14 @@ architect runners: opus, fable, sonnet
 interrogate reviewers: opus, fable, sonnet
 
 default effort: session
-session hook: on
+session hook: off
 ```
 
 ### 7. Wire it in
 
-On Claude Code, if `<config>/CLAUDE.md` does not already include `<config>/pstack-models.md`, append an `@` line naming the sheet's resolved path, such as `@~/.claude/pstack-models.md`, so the model rows load on every session. If the user prefers project scope, add the include to the project's `CLAUDE.md` instead.
+On Claude Code, if `<config>/CLAUDE.md` does not already include `<config>/pstack-mod-models.md`, append an `@` line naming the sheet's resolved path, such as `@~/.claude/pstack-mod-models.md`, so the model rows load on every session. If the user prefers project scope, add the include to the project's `CLAUDE.md` instead.
 
-On Codex, paste the model rows and the `default effort` line into `<codex-home>/AGENTS.md`; Codex has no `@` include. Do not paste the `session hook` line there: the plugin hook reads it directly from `<codex-home>/pstack-models.md`.
+On Codex, paste the model rows and the `default effort` line into `<codex-home>/AGENTS.md`; Codex has no `@` include. Do not paste the `session hook` line there: the plugin hook reads it directly from `<codex-home>/pstack-mod-models.md`.
 
 ### 8. Confirm
 
@@ -92,10 +94,10 @@ The role lines are the same everywhere. What differs is the sheet path, how the 
 
 | Runtime | Sheet | Load | List models | Status |
 | --- | --- | --- | --- | --- |
-| Claude Code | `<config>/pstack-models.md` | `@<config>/pstack-models.md` in `<config>/CLAUDE.md` | the `Agent` tool's model parameter | verified live |
-| Codex | `<codex-home>/pstack-models.md` | model rows: paste into `<codex-home>/AGENTS.md`; hook setting: read by the plugin | your configured Codex models, see [codex-tools.md](../poteto-mode/references/codex-tools.md#model-names) | hook contract tested; discovery verified |
-| opencode | `~/.config/opencode/pstack-models.md` | add the path to the `instructions` array in `opencode.json` | the `models` slash command in the session | from published docs, no live session |
-| Gemini CLI | `~/.gemini/pstack-models.md` | `@~/.gemini/pstack-models.md` in `~/.gemini/GEMINI.md` | the `model` slash command in the session | from published docs, no live session |
+| Claude Code | `<config>/pstack-mod-models.md` | `@<config>/pstack-mod-models.md` in `<config>/CLAUDE.md` | the `Agent` tool's model parameter | manifest and exec launcher checked; pstack-mod interactive setup pending |
+| Codex | `<codex-home>/pstack-mod-models.md` | model rows: paste into `<codex-home>/AGENTS.md`; hook setting: read by the plugin | your configured Codex models, see [codex-tools.md](../poteto-mode/references/codex-tools.md#model-names) | launcher and isolated CLI install checked; pstack-mod interactive setup and dual-plugin discovery pending |
+| opencode | `~/.config/opencode/pstack-mod-models.md` | add the path to the `instructions` array in `opencode.json` | the `models` slash command in the session | from published docs, no live session |
+| Gemini CLI | `~/.gemini/pstack-mod-models.md` | `@~/.gemini/pstack-mod-models.md` in `~/.gemini/GEMINI.md` | the `model` slash command in the session | from published docs, no live session |
 | Prime Agent | no documented sheet path; Prime's configuration chooses models | | | no live session |
 
 ## Models

@@ -1,6 +1,6 @@
 ---
 name: poteto-agent-low
-description: Runs `pstack:poteto-agent` at low reasoning effort. Dispatched in place of `pstack:poteto-agent` when a pstack role's override names `@low`. The caller passes the model.
+description: Runs `pstack-mod:poteto-agent` at low reasoning effort. Dispatched in place of `pstack-mod:poteto-agent` when a pstack role's override names `@low`. The caller passes the model.
 effort: low
 ---
 

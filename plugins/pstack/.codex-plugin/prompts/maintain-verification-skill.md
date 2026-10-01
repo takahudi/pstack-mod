@@ -4,4 +4,4 @@ description: re-sync a drifted verification skill and its feature map
 disable-model-invocation: true
 ---
 
-Invoke the `maintain-verification-skill` skill and follow it.
+Invoke the `pstack-mod:maintain-verification-skill` skill and follow it.

@@ -13,6 +13,27 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  windows-port:
+    name: Windows identity and routing
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version: "1.3.14"
+      - name: Verify Node runtime
+        run: node --version
+      - name: Check generated files and both host manifests
+        run: bun tools/generate.mjs --check
+      - name: Exercise native hook launchers and namespace conversion
+        run: bun test tests/identity.test.mjs tests/session-hook.test.mjs
+      - name: Install the locked Codex CLI for the smoke test
+        run: npm ci --prefix tools/ci --ignore-scripts --no-audit --no-fund
+      - name: Discover and install this checkout in an isolated profile
+        run: node tools/smoke-install.mjs tools/ci/node_modules/@openai/codex/bin/codex.js
+
   generated:
     name: Generated files current
     runs-on: ubuntu-latest

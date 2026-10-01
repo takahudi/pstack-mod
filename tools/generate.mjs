@@ -53,6 +53,7 @@ import { basename, dirname, join, relative } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
 import { markdownFiles, pathIsInside, validateProsePaths, validateSkillsTree, walk } from "./validate-skills.mjs";
+import { adaptIdentity, canonicalIdentity, loadIdentity, stampIdentity } from "./identity.mjs";
 
 const repo = join(dirname(fileURLToPath(import.meta.url)), "..");
 
@@ -271,14 +272,14 @@ export function slashCommands(markdown, skillNames) {
 // native invocation and skills-only installs do not depend on these stubs. A
 // skill with the stamped Codex preamble already sends the reader to the
 // mapping, so its stub does not say it again.
-export function promptStub({ name, menu }, { preamble } = {}) {
+export function promptStub({ name, menu }, { preamble, identity = canonicalIdentity } = {}) {
   const pointer = preamble
     ? ""
     : " Resolve Claude tool names, Claude model names, and Claude built-in skills through " +
       "`poteto-mode/references/codex-tools.md`, including its Per-skill notes.";
   return (
     `---\nname: ${name}\ndescription: ${menu}\ndisable-model-invocation: true\n---\n\n` +
-    `Invoke the \`${name}\` skill and follow it.${pointer}\n`
+    `Invoke the \`${identity.name}:${name}\` skill and follow it.${pointer}\n`
   );
 }
 
@@ -434,6 +435,7 @@ export function stampLeadLine(text, line) {
 // anchor throws: a stamped region is a structural contract with the file, not
 // an optional nicety. With strict: false a missing anchor is left alone.
 export function applyRegions(file, text, models, { strict = true } = {}) {
+  file = file.replaceAll("\\", "/");
   const lines = text.split("\n");
   for (const region of regions(models).filter((r) => r.file === file)) {
     const range = region.locate(lines);
@@ -566,7 +568,8 @@ function portFrontmatter(file, text) {
 // upstream has none, which is where every hand-added one already sits. A
 // region whose anchor upstream lacks is left unstamped, so the file surfaces
 // as forked or conflicted instead of aborting the sync.
-export function deriveSkill(file, text, models, leads) {
+export function deriveSkill(file, text, models, leads, identity = canonicalIdentity) {
+  file = file.replaceAll("\\", "/");
   const front = portFrontmatter(file, text);
   const line = leads.get(file);
   const out = (line && stampLeadLine(front, line)) || front;
@@ -576,7 +579,7 @@ export function deriveSkill(file, text, models, leads) {
     if (lines.at(-1) !== "") lines.push("");
     lines.push(region.appendHeading, "");
   }
-  return applyRegions(file, lines.join("\n"), models, { strict: false });
+  return adaptIdentity(applyRegions(file, lines.join("\n"), models, { strict: false }), identity);
 }
 
 export function modelsSection(roles) {
@@ -692,10 +695,10 @@ export function overrideSheetBlock(models) {
     "A model may carry a reasoning effort, as in `opus @xhigh` (levels: " + models.efforts.join(", ") + "); " +
     "the role then runs through the pstack effort agent of that level, each entry of a panel list on its own. " +
     "`default effort` sets the level for a value without one; `session` keeps the parent session's effort. " +
-    "`session hook: off` stops the Claude Code or Codex SessionStart hook from injecting the poteto-mode mandate; " +
-    "any other value, or no line, leaves it on.\n\n" +
+    "Only a single explicit `session hook: on` enables the Claude Code or Codex SessionStart hook. " +
+    "Off, missing, invalid, or duplicate settings leave routing disabled. Preserve the existing valid choice when updating models.\n\n" +
     rows +
-    `\n\ndefault effort: ${models.defaultEffort}\nsession hook: on`
+    `\n\ndefault effort: ${models.defaultEffort}\nsession hook: off`
   );
 }
 
@@ -744,12 +747,13 @@ export function validateHooks(hooksJson, { statOf, file = "hooks/hooks.json" }) 
   for (const [event, groups] of Object.entries(JSON.parse(hooksJson).hooks ?? {})) {
     for (const group of groups) {
       for (const hook of group.hooks ?? []) {
-        const refs = [...hook.command.matchAll(/\$\{CLAUDE_PLUGIN_ROOT\}\/([^"\s]+)/g)].map((m) => m[1]);
+        const commands = [hook.command, ...(hook.args ?? []), ...(hook.commandWindows ? [hook.commandWindows] : [])];
+        const refs = commands.flatMap((command) => [...command.matchAll(/(?:\$\{(?:CLAUDE_)?PLUGIN_ROOT\}|\$env:CLAUDE_PLUGIN_ROOT)\/([^"\s]+)/g)].map((m) => m[1]));
         if (!refs.length) {
           faults.push(`${event}: command does not reference \${CLAUDE_PLUGIN_ROOT}: ${hook.command}`);
           continue;
         }
-        const executed = hook.command.replace(/^"/, "").startsWith("${CLAUDE_PLUGIN_ROOT}/");
+        const executed = !hook.args && hook.command.replace(/^"/, "").startsWith("${CLAUDE_PLUGIN_ROOT}/");
         refs.forEach((rel, i) => {
           const st = statOf(rel);
           if (!st) faults.push(`${event}: ${rel} does not exist`);
@@ -761,12 +765,66 @@ export function validateHooks(hooksJson, { statOf, file = "hooks/hooks.json" }) 
   if (faults.length) throw new Error(`${file}:\n  ${faults.join("\n  ")}`);
 }
 
-// Every file the generator writes, as exact text by repo-relative path,
-// computed from the sources under `root` without writing. Any other entry in
-// an owned directory is an orphan. Throws when a source cannot be planned.
-// Without `models`, plan loads the model policy from `root` itself.
+export function validateRoutingHooks(claude, codex) {
+  const handler = (text) => {
+    const config = JSON.parse(text);
+    const groups = config.hooks?.SessionStart;
+    if (Object.keys(config.hooks ?? {}).join() !== "SessionStart" || groups?.length !== 1 ||
+        groups[0].matcher !== "startup|resume|clear|compact" || groups[0].hooks?.length !== 1) {
+      throw new Error("routing hooks must declare one startup/resume/clear/compact handler");
+    }
+    return groups[0].hooks[0];
+  };
+  const c = handler(claude);
+  const x = handler(codex);
+  if (c.type !== "command" || c.command !== "node" ||
+      JSON.stringify(c.args) !== JSON.stringify(["${CLAUDE_PLUGIN_ROOT}/hooks/session-start.mjs", "claude"]) ||
+      x.type !== "command" || x.command !== 'node "${CLAUDE_PLUGIN_ROOT}/hooks/session-start.mjs" codex' ||
+      x.commandWindows !== 'node "$env:CLAUDE_PLUGIN_ROOT/hooks/session-start.mjs" codex' ||
+      c.async || x.async || c.timeout !== 5 || x.timeout !== 5) {
+    throw new Error("routing hooks must use the cross-platform Node launchers, including commandWindows");
+  }
+}
+
+export function validateIdentity(root) {
+  const identity = loadIdentity(root);
+  for (const file of ["plugins/pstack/.claude-plugin/plugin.json", "plugins/pstack/.codex-plugin/plugin.json",
+    ".claude-plugin/marketplace.json", ".agents/plugins/marketplace.json"]) {
+    const value = JSON.parse(readFileSync(join(root, file), "utf8"));
+    if (value.name !== identity.name || (value.plugins && (value.plugins.length !== 1 || value.plugins[0].name !== identity.name))) {
+      throw new Error(`${file}: identity does not match ${identity.name}`);
+    }
+  }
+  const pluginRoot = join(root, PLUGIN);
+  const skills = agentSkills(join(pluginRoot, "skills"));
+  const ids = [...skills.map((skill) => `${identity.name}:${skill.name}`),
+    ...pluginAgentPaths(pluginRoot).map((p) => `${identity.name}:${basename(p, ".md")}`)];
+  if (new Set(ids).size !== ids.length) throw new Error("duplicate skill or agent IDs");
+  for (const file of markdownFiles(pluginRoot)) {
+    if (file.replaceAll("\\", "/").includes("/references/licenses/")) continue;
+    const text = readFileSync(file, "utf8");
+    if (/(?<![a-z0-9-])pstack:/.test(text) || /(?<![a-z0-9-])pstack-models\.md/.test(text)) {
+      throw new Error(`${relative(root, file)}: stale upstream runtime identity`);
+    }
+    for (const [id] of text.matchAll(new RegExp(`${identity.name}:[a-z0-9-]+(?:<level>)?`, "g"))) {
+      if (id.endsWith("<level>")) {
+        if (![`${identity.name}:effort-<level>`, `${identity.name}:poteto-agent-<level>`].includes(id)) {
+          throw new Error(`${file}: unknown agent template ${id}`);
+        }
+      } else if (!ids.includes(id)) throw new Error(`${file}: unknown own ID ${id}`);
+    }
+  }
+}
+
+// Plan exact text by repo-relative path without writing. Other entries in
+// owned directories are orphans. Missing models load from root.
 export function plan(root, models) {
   const read = (rel) => readFileSync(join(root, rel), "utf8");
+  const identity = loadIdentity(root);
+  const previousName = JSON.parse(read(`${PLUGIN}/.claude-plugin/plugin.json`)).name;
+  if (previousName !== JSON.parse(read(`${PLUGIN}/.codex-plugin/plugin.json`)).name) {
+    throw new Error("host manifests disagree on the previous namespace");
+  }
   const version = read("VERSION").trim();
   if (!/^\d+\.\d+\.\d+$/.test(version)) throw new Error(`VERSION must be MAJOR.MINOR.PATCH, got "${version}"`);
   assertChangesHeading(read("CHANGES.md"), version);
@@ -796,7 +854,7 @@ export function plan(root, models) {
   }
   for (const skill of slashCommands(read(COMMANDS_DOC), publicSkills(join(root, SKILLS)))) {
     const preamble = leads.get(`${SKILLS}/${skill.name}/SKILL.md`) === CODEX_PREAMBLE;
-    put(`${PROMPTS}/${skill.name}.md`, promptStub(skill, { preamble }));
+    put(`${PROMPTS}/${skill.name}.md`, promptStub(skill, { preamble, identity }));
   }
   const agents = effortAgents(models.efforts, read(`${PLUGIN}/agents/poteto-agent.md`));
   for (const agent of agents) put(`${EFFORT_AGENTS}/${agent.name}.md`, agent.text);
@@ -813,7 +871,7 @@ export function plan(root, models) {
   const realRoot = realpathSync(root);
   for (const { source, target } of PORTABLE_ASSETS) {
     const path = `${SKILLS}/${target}`;
-    if (!OWNED_DIRS.includes(dirname(path))) {
+    if (!OWNED_DIRS.includes(dirname(path).replaceAll("\\", "/"))) {
       throw new Error(`${path} is not directly inside a generator-owned directory (${OWNED_DIRS.join(", ")})`);
     }
     if (!pathIsInside(realRoot, realpathSync(join(root, source)))) {
@@ -821,6 +879,25 @@ export function plan(root, models) {
     }
     put(path, read(source));
   }
+  for (const full of markdownFiles(join(root, PLUGIN))) {
+    const rel = relative(root, full).replaceAll("\\", "/");
+    if (rel.includes("/references/licenses/")) continue;
+    const text = adaptIdentity(current(rel), identity, previousName);
+    if (text !== current(rel)) files[rel] = text;
+  }
+  for (const rel of Object.keys(files)) {
+    if (!rel.includes("/references/licenses/")) files[rel] = adaptIdentity(files[rel], identity, previousName);
+  }
+  for (const rel of ["README.md", "README.en.md", "docs/reference.md", "CONTRIBUTING.md"]) {
+    const text = adaptIdentity(current(rel), identity, previousName);
+    if (text !== current(rel)) files[rel] = text;
+  }
+  for (const [file, kind] of [
+    [`${PLUGIN}/.claude-plugin/plugin.json`, "claude"],
+    [`${PLUGIN}/.codex-plugin/plugin.json`, "codex"],
+    [".claude-plugin/marketplace.json", "claude-marketplace"],
+    [".agents/plugins/marketplace.json", "codex-marketplace"],
+  ]) stamp(file, (text) => stampIdentity(JSON.parse(text), identity, kind));
   return { files, ownedDirs: OWNED_DIRS };
 }
 
@@ -900,7 +977,7 @@ export function problems(root, models) {
   if (models) {
     attempt(() => {
       const strays = markdownFiles(skillsDir).flatMap((full) =>
-        strayModelSlugs(relative(root, full), readFileSync(full, "utf8"), models),
+        strayModelSlugs(relative(root, full).replaceAll("\\", "/"), readFileSync(full, "utf8"), models),
       );
       if (strays.length) {
         throw new Error(
@@ -913,7 +990,7 @@ export function problems(root, models) {
   attempt(() => {
     const leads = loadLeadLines(root);
     const strays = markdownFiles(skillsDir).flatMap((full) => {
-      const file = relative(root, full);
+      const file = relative(root, full).replaceAll("\\", "/");
       return readFileSync(full, "utf8")
         .split("\n")
         .flatMap((line, i) =>
@@ -939,6 +1016,9 @@ export function problems(root, models) {
   }
   attempt(() => validatePluginLayout(pluginRoot));
   attempt(() => validateAgentFrontmatter(pluginRoot));
+  if (codexManifest) attempt(() => validateIdentity(root));
+  attempt(() => validateRoutingHooks(readFileSync(join(pluginRoot, "hooks/hooks.json"), "utf8"),
+    readFileSync(join(pluginRoot, "hooks/codex-hooks.json"), "utf8")));
   for (const file of ["hooks/hooks.json", ...(codexManifest ? [codexManifest.hooks] : [])]) {
     attempt(() => validateHooks(readFileSync(join(pluginRoot, file), "utf8"), { statOf, file }));
   }

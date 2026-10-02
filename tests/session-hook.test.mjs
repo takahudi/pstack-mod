@@ -17,6 +17,11 @@ const variants = [
   ["claude", null], ["claude", "CLAUDE_CONFIG_DIR"], ["codex", null], ["codex", "CODEX_HOME"],
 ];
 
+// Windows CI's first Node launch took 11.3s. Bound child startup and execution
+// separately from the outer test, leaving time for assertions and cleanup.
+const PROCESS_TIMEOUT_MS = 15_000;
+const PROCESS_TEST_TIMEOUT_MS = 20_000;
+
 function runHook(runtime, sheet, relocated = null, { oddPath = false, legacy = false, other = false, source = "startup" } = {}) {
   const home = mkdtempSync(join(tmpdir(), "flow-hook-"));
   const root = oddPath ? join(home, "plugin 日本語 space ' $ `") : pluginRoot;
@@ -51,7 +56,7 @@ function runHook(runtime, sheet, relocated = null, { oddPath = false, legacy = f
     args = ["-c", handler.command];
   }
   try {
-    const result = spawnSync(executable, args, {env, encoding: "utf8", input: JSON.stringify({hook_event_name: "SessionStart", source}), timeout: 10000});
+    const result = spawnSync(executable, args, {env, encoding: "utf8", input: JSON.stringify({hook_event_name: "SessionStart", source}), timeout: PROCESS_TIMEOUT_MS});
     expect(result.error).toBeUndefined();
     expect(readdirSync(config).map((file) => [file, readFileSync(join(config, file), "utf8")])).toEqual(before);
     return {status: result.status, out: result.stdout, err: result.stderr};
@@ -84,27 +89,28 @@ describe("optional SessionStart hook", () => {
   });
   test("unknown runtime is rejected", () => {
     expect(() => settingPath("cursor", {}, "home", "sheet.md")).toThrow("unknown runtime");
-    const result = spawnSync("node", [join(pluginRoot, "hooks/session-start.mjs"), "cursor"], {encoding: "utf8"});
+    const result = spawnSync("node", [join(pluginRoot, "hooks/session-start.mjs"), "cursor"], {encoding: "utf8", timeout: PROCESS_TIMEOUT_MS});
+    expect(result.error).toBeUndefined();
     expect(result.status).toBe(1);
     expect(result.stdout).toBe("");
     expect(result.stderr).toContain("unknown runtime 'cursor'");
-  });
+  }, PROCESS_TEST_TIMEOUT_MS);
   for (const [runtime, relocated] of variants) describe(`${runtime} ${relocated ?? "default home"}`, () => {
     for (const sheet of [null, "bug-fix: configured-model\n", "session hook: off\n", "session hook: invalid\n"]) {
       test(`disabled for ${JSON.stringify(sheet)}`, () => {
         expect(runHook(runtime, sheet, relocated)).toEqual({status: 0, out: "", err: ""});
-      });
+      }, PROCESS_TEST_TIMEOUT_MS);
     }
     for (const source of ["startup", "resume", "clear", "compact"]) {
       test(`enabled on ${source}, using the shipped launcher`, () => {
         expect(runHook(runtime, "bug-fix: configured-model\r\nsession hook: on\r\n", relocated, {source})).toEqual({status: 0, out: mandate, err: ""});
-      });
+      }, PROCESS_TEST_TIMEOUT_MS);
     }
     test("ignores the old plugin and other runtime's setting", () => {
       expect(runHook(runtime, null, relocated, {legacy: true, other: true})).toEqual({status: 0, out: "", err: ""});
-    });
+    }, PROCESS_TEST_TIMEOUT_MS);
     test("preserves spaces, Japanese and shell metacharacters in the plugin path", () => {
       expect(runHook(runtime, "session hook: on\n", relocated, {oddPath: true})).toEqual({status: 0, out: mandate, err: ""});
-    });
+    }, PROCESS_TEST_TIMEOUT_MS);
   });
 });

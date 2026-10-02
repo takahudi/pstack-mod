@@ -2,6 +2,10 @@
 
 This file is the release changelog, with one `## <version> - <title>` entry per release, newest first. The Cursor-to-Claude rewrite rules live in [`tools/substitutions.json`](tools/substitutions.json), and the [sync boundary](CONTRIBUTING.md#the-sync-boundary) in `CONTRIBUTING.md` defines which changes belong upstream.
 
+## 0.1.1 - one source for Codex model overrides
+
+Codex setup now writes a pointer in user `AGENTS.md` that requires reading `pstack-mod-models.md` before role selection and subagent dispatch. Role values and default effort live only in the model sheet. Setup replaces the earlier copied pstack-mod block with the pointer, preserving other user instructions and the existing hook choice. The pointer is an explicit read instruction rather than automatic file inclusion.
+
 ## 0.1.0 - pstack-mod local preview
 
 The default repository README is Japanese, with a linked English README. Both document installation from the `takahudi/pstack-mod` GitHub marketplace and from a local checkout. Plugin metadata points at the user's repository.

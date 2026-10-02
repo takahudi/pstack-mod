@@ -60,6 +60,8 @@ This directory starts from `michael-denyer/pstack-claude` with its Git history i
 
 Implemented identity and hook decisions are in [the design](PSTACK_MOD_DESIGN.md). `plugins/pstack/identity.json` is the identity source. Physical upstream paths remain stable. Both sync revisions use the same personal identity derivation. Generated prompts use qualified IDs. Namespaced model sheets isolate pstack-mod from the old plugin. The read-only Node hook needs no shell utilities; Claude uses exec-form arguments and Codex has a Windows override. Setup preserves the existing valid on/off choice on model updates, and supports a hook-only path.
 
+Codex model settings use one authoritative sheet. User `AGENTS.md` has a pointer instructing the agent to read the resolved sheet before selecting pstack-mod role models or spawning subagents. Setup migrates the earlier copied role block to this pointer and preserves unrelated user instructions. The user's existing model choices and hook choice are retained.
+
 Verification completed:
 
 - Windows generator check passed. Windows identity and hook suite passed 50 tests. The shipped Claude argument array and Codex PowerShell override ran with spaces, Japanese and shell metacharacters in plugin paths, and with startup/resume/clear/compact input values.

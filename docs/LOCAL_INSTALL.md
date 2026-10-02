@@ -14,6 +14,8 @@ Node.js 18 or later must be on PATH for optional routing. Claude Code must suppo
 
 pstack-mod reads `pstack-mod-models.md` in the current host's configuration directory. Claude uses `CLAUDE_CONFIG_DIR` or `~/.claude`; Codex uses `CODEX_HOME` or `~/.codex`. Missing settings leave routing disabled. Setup preserves a single existing valid on/off choice when changing models. Only an explicit user choice enables routing. Model rows use the active vendor's models.
 
+On Codex, the sheet is the single source of truth for role models and default effort. User `AGENTS.md` contains a pointer requiring the agent to read that sheet before selecting pstack-mod role models or spawning subagents. Setup replaces an older copied pstack-mod block with this pointer and preserves other instructions. Codex reads the linked file by following the instruction; the link is not automatically expanded like Claude Code's `@` include.
+
 The old `pstack-models.md` is never read automatically. If migrating model choices, inspect the old sheet and copy only models available in the target host. Keep pstack-mod's hook off until automatic routing is selected. Codex still requires review through `/hooks`. Global or plugin hook disabling takes precedence over the sheet's on value.
 
 ## Update and rollback

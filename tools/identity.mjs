@@ -30,7 +30,7 @@ export function stampIdentity(manifest, identity, kind) {
     if (kind === "codex-marketplace") manifest.interface.displayName = identity.displayName;
   } else if (kind === "claude") {
     manifest.displayName = identity.displayName;
-  } else {
+  } else if (kind === "codex") {
     manifest.interface.displayName = identity.displayName;
   }
   return JSON.stringify(manifest, null, 2) + "\n";

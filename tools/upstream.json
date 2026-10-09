@@ -4,7 +4,7 @@
     "pstack": {
       "upstreamPath": "pstack",
       "localPath": "plugins/pstack",
-      "sha": "12d587d",
+      "sha": "df581122cde17e6e27686b5a448bde23e4ad4318",
       "exclude": [
         ".cursor-plugin/",
         ".gitignore",
@@ -20,7 +20,7 @@
     "cursor-team-kit": {
       "upstreamPath": "cursor-team-kit/skills",
       "localPath": "plugins/pstack/skills",
-      "sha": "e46364b8be46000b7df0f260550cd712afbb8d36",
+      "sha": "2b8ae2ee306f823d54879d3da7f8496b73c31d5d",
       "exclude": [
         "check-compiler-errors/",
         "control-cli/",

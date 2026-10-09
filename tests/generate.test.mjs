@@ -24,9 +24,9 @@ import {
   applyRegions,
   assertChangesHeading,
   changes,
-  codexNoteSkills,
   deriveSkill,
   loadLeadLines,
+  noteSkills,
   effortAgents,
   effortSection,
   OWNED_DIRS,
@@ -46,14 +46,14 @@ import {
   stampVersion,
   strayModelSlugs,
   tableRows,
-  validateCodexMarketplace,
-  validateHooks,
 } from "../tools/generate.mjs";
+import { piModelNamesSection, RUNTIMES } from "../tools/runtimes.mjs";
 import { walk } from "../tools/validate-skills.mjs";
 
 const repoRoot = fileURLToPath(new URL("..", import.meta.url));
 const models = loadModels();
 const leads = loadLeadLines();
+const [codex, pi, copilot] = RUNTIMES;
 
 const lines = (text) => text.split("\n");
 const spanned = (locate, doc) => {
@@ -133,6 +133,25 @@ describe("regions", () => {
   });
 });
 
+describe("runtime model names", () => {
+  test("each runtime's mapping file owns a stamped Model names section", () => {
+    for (const runtime of RUNTIMES) {
+      expect(regions(models).filter((r) => r.file === runtime.tools).map((r) => r.name)).toEqual(["Model names section"]);
+    }
+  });
+
+  test("the Pi section tables every alias per provider, names the fallback, and names the sheet override", () => {
+    const tables = { ...models.pi.models, marker: { opus: "marker/o", fable: "marker/f", sonnet: "marker/s", haiku: "marker/h" } };
+    const text = piModelNamesSection({ ...models, pi: { fallback: "marker", models: tables } });
+    expect(text).toContain(`| Alias | ${Object.keys(tables).map((p) => `\`${p}\``).join(" | ")} |`);
+    for (const alias of models.available) {
+      expect(text).toContain(`| \`${alias}\` | ${Object.values(tables).map((t) => `\`${t[alias]}\``).join(" | ")} |`);
+    }
+    expect(text).toContain("in the `marker` column for any other provider");
+    expect(text).toContain("`pi models: ");
+  });
+});
+
 describe("strayModelSlugs", () => {
   test("a slug inside an owned region is exempt", () => {
     const file = "plugins/pstack/skills/how/SKILL.md";
@@ -161,6 +180,38 @@ describe("strayModelSlugs", () => {
       "plugins/pstack/skills/other/SKILL.md:3: Delegate to `fable` for this.",
     ]);
   });
+
+  test.each([
+    "claude-3-opus-20240229",
+    "claude-3-5-haiku-20241022",
+    "claude-3.7-sonnet",
+    "anthropic/claude-3.5-sonnet",
+    "anthropic.claude-3-5-sonnet-20240620-v1:0",
+  ])("a claude-* ID that puts version numbers before a listed family is a stray: %s", (id) => {
+    const file = "plugins/pstack/skills/other/SKILL.md";
+    expect(strayModelSlugs(file, `# other\n\nDispatch with \`${id}\`.\n`, models)).toEqual([`${file}:3: Dispatch with \`${id}\`.`]);
+  });
+
+  test.each([
+    "Run it in claude-code and read claude-mem.",
+    "Needs claude-code-2.1.267 or newer.",
+    "Needs claude-code-2.x or newer.",
+    "Needs claude-code-2 or newer.",
+    "Pin claude-agent-sdk-0.2.x in package.json.",
+    "Pin claude-sdk-1.x in package.json.",
+    "Sandbox scratch lives in /tmp/claude-501/.",
+    "Sandbox scratch lives in /tmp/claude-99-cwd/.",
+    "Back up to ~/.claude-backup-20261006 first.",
+    "Back up to ~/.claude-backup-06-10 first.",
+    "Tracked as claude-code-issue-12345.",
+    "Tracked as claude-issue-42.",
+    "Name the worktrees claude-wt-1 and claude-wt-2.",
+    "Step claude-1-setup, then claude-2-run.",
+    "Name the worktree claude-wt-opus.",
+    "Run the claude-octopus demo.",
+  ])("a claude-* slug with no listed family after claude- or its version numbers is not a stray: %s", (line) => {
+    expect(strayModelSlugs("plugins/pstack/skills/other/SKILL.md", `# other\n\n${line}\n`, models)).toEqual([]);
+  });
 });
 
 describe("stampVersion", () => {
@@ -185,93 +236,68 @@ describe("assertChangesHeading", () => {
       'read "## <version> - <title>":\n## 0.9.0 — em dash\n## 0.8.9',
     );
   });
-});
 
-describe("validateCodexMarketplace", () => {
-  const manifest = (plugins) => JSON.stringify({ plugins });
-  test("needs one entry whose name matches and whose path exists", () => {
-    const ok = { name: "pstack", source: { path: "./plugins/pstack" } };
-    expect(() =>
-      validateCodexMarketplace(manifest([ok]), { expectedName: "pstack", pathExists: () => true }),
-    ).not.toThrow();
-    expect(() => validateCodexMarketplace(manifest([]), { expectedName: "pstack", pathExists: () => true })).toThrow(
-      "expected 1 plugin entry, found 0",
-    );
-    expect(() =>
-      validateCodexMarketplace(manifest([{ ...ok, name: "other" }]), { expectedName: "pstack", pathExists: () => true }),
-    ).toThrow('plugin name "other" != Codex manifest name "pstack"');
-    expect(() => validateCodexMarketplace(manifest([ok]), { expectedName: "pstack", pathExists: () => false })).toThrow(
-      "does not resolve to a directory",
-    );
-  });
-});
-
-describe("manifests", () => {
-  const json = (rel) => JSON.parse(readFileSync(join(repoRoot, rel), "utf8"));
-  const claude = json("plugins/pstack/.claude-plugin/plugin.json");
-  const codex = json("plugins/pstack/.codex-plugin/plugin.json");
-  const claudeMarketplace = json(".claude-plugin/marketplace.json");
-  const codexMarketplace = json(".agents/plugins/marketplace.json");
-
-  test("the plugin and marketplace manifests agree on every fact they repeat", () => {
-    const shared = ({ name, author, homepage, repository, license, keywords }) =>
-      ({ name, author, homepage, repository, license, keywords });
-    expect([claude.name, claude.author, claude.homepage, claude.license, claude.keywords]).not.toContain(undefined);
-    expect(claude.author.name).toBe("takahudi");
-    expect(claude.repository).toBe("https://github.com/takahudi/pstack-mod");
-    expect(codex.repository).toBe(claude.repository);
-    expect(shared(codex)).toEqual(shared(claude));
-    expect(claudeMarketplace.owner).toEqual(claude.author);
-    expect(claudeMarketplace.plugins.map(({ name, source }) => [name, source])).toEqual([[claude.name, "./plugins/pstack"]]);
-    expect(codexMarketplace.name).toBe(claudeMarketplace.name);
-    expect(codexMarketplace.interface.displayName).toBe(codex.interface.displayName);
-    expect(codexMarketplace.plugins.map(({ name, source, category }) => [name, source.path, category])).toEqual([
-      [codex.name, claudeMarketplace.plugins[0].source, codex.interface.category],
-    ]);
-  });
-});
-
-describe("validateHooks", () => {
-  const hooks = (command) =>
-    JSON.stringify({ hooks: { SessionStart: [{ hooks: [{ type: "command", command }] }] } });
-  const exec = { mode: 0o755 };
-  const plain = { mode: 0o644 };
-
-  test("accepts an executable script under the plugin root", () => {
-    const statOf = (rel) => (rel === "hooks/session-start.sh" ? exec : null);
-    expect(() => validateHooks(hooks('"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"'), { statOf })).not.toThrow();
-  });
-
-  test("checks the script, not the runtime argument after it", () => {
-    const cmd = hooks('"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh" codex');
-    const statOf = (rel) => (rel === "hooks/session-start.sh" ? exec : null);
-    expect(() => validateHooks(cmd, { statOf })).not.toThrow();
-    expect(() => validateHooks(cmd, { statOf: () => plain })).toThrow("hooks/session-start.sh is not executable");
-    expect(() => validateHooks(cmd, { statOf: () => null, file: "hooks/codex-hooks.json" })).toThrow(
-      "hooks/codex-hooks.json:\n  SessionStart: hooks/session-start.sh does not exist",
+  test("a heading newer than VERSION fails naming both, so an entry without a bump cannot ship", () => {
+    expect(() => assertChangesHeading("# Changes\n\n## 0.9.71 - newer\n\n## 0.9.70 - current\n", "0.9.70")).toThrow(
+      'CHANGES.md\'s newest release heading is "## 0.9.71 - newer", but VERSION is 0.9.70',
     );
   });
 
-  test("names a missing or non-executable target", () => {
-    expect(() => validateHooks(hooks('"${CLAUDE_PLUGIN_ROOT}/hooks/nope"'), { statOf: () => null })).toThrow(
-      "SessionStart: hooks/nope does not exist",
-    );
-    expect(() => validateHooks(hooks('"${CLAUDE_PLUGIN_ROOT}/hooks/session-start.sh"'), { statOf: () => plain })).toThrow(
-      "hooks/session-start.sh is not executable",
+  test("a newer version that only extends VERSION fails like any other", () => {
+    expect(() => assertChangesHeading("# Changes\n\n## 0.9.70 - newer\n\n## 0.9.7 - current\n", "0.9.7")).toThrow(
+      'CHANGES.md\'s newest release heading is "## 0.9.70 - newer", but VERSION is 0.9.7',
     );
   });
 
-  test("a file the command reads only has to exist", () => {
-    const cmd = hooks('cat "${CLAUDE_PLUGIN_ROOT}/hooks/session-start-context.md"');
-    expect(() => validateHooks(cmd, { statOf: () => plain })).not.toThrow();
-    expect(() => validateHooks(cmd, { statOf: () => null })).toThrow(
-      "SessionStart: hooks/session-start-context.md does not exist",
+  test.each(["## v0.9.71 - newer", "## [0.9.71] - newer", "##  0.9.71 - newer", "##0.9.71 - newer", "### 0.9.71 - newer", "# 0.9.71 - newer"])(
+    "an entry headed %s above the VERSION heading fails, whatever its level, spacing, or decoration",
+    (heading) => {
+      expect(() => assertChangesHeading(`# Changes\n\n${heading}\n\n## 0.9.70 - current\n`, "0.9.70")).toThrow(
+        `CHANGES.md's newest release heading is "${heading}", but VERSION is 0.9.70`,
+      );
+    },
+  );
+
+  test.each(["## About this file", "## Unreleased", "## Format since 0.9.13", "## 2.0 plans"])(
+    "a heading that does not lead with a three-part version is no entry and may sit above the newest: %s",
+    (heading) => {
+      expect(() => assertChangesHeading(`# Changes\n\n${heading}\n\n## 0.9.71 - new\n\n## 0.9.70 - old\n`, "0.9.71")).not.toThrow();
+    },
+  );
+
+  test("a version that heads two entries fails naming both, so new work under the old number cannot ship", () => {
+    expect(() => assertChangesHeading("# Changes\n\n## 0.9.70 - newer work\n\n## 0.9.70 - current\n", "0.9.70")).toThrow(
+      "CHANGES.md heads two entries with one version:\n## 0.9.70 - newer work\n## 0.9.70 - current",
     );
   });
 
-  test("rejects a command that does not go through the plugin root", () => {
-    expect(() => validateHooks(hooks("cat /etc/motd"), { statOf: () => exec })).toThrow(
-      "does not reference ${CLAUDE_PLUGIN_ROOT}",
+  test("a heading that is not a release may sit below the newest entry", () => {
+    expect(() => assertChangesHeading("## 0.9.1 - title\n\n## Upstream review\n\n## 0.9.0 - older\n", "0.9.1")).not.toThrow();
+  });
+
+  test.each([
+    ["an older heading quoted in the newest entry", "## 0.9.71 - new\n\n```\n## 0.9.70 - old\n```\n\n## 0.9.70 - old\n"],
+    ["a sample heading above the first entry", "```md\n## 1.2.3 - title\n```\n\n## 0.9.71 - new\n\n## 0.9.70 - old\n"],
+    ["a tilde fence", "## 0.9.71 - new\n\n~~~\n## 0.9.70 - old\n~~~\n\n## 0.9.70 - old\n"],
+    ["an indented fence", "## 0.9.71 - new\n\n ```\n## 0.9.70 - old\n ```\n\n## 0.9.70 - old\n"],
+    ["a longer fence holding a shorter one", "## 0.9.71 - new\n\n````\n```\n## 0.9.70 - old\n```\n````\n\n## 0.9.70 - old\n"],
+    ["a tilde line inside a backtick fence", "## 0.9.71 - new\n\n```\n~~~\n## 0.9.70 - old\n~~~\n```\n\n## 0.9.70 - old\n"],
+    ["a longer run closing a shorter fence", "```\n## 1.2.3 - sample\n````\n\n## 0.9.71 - new\n\n## 0.9.70 - old\n"],
+    ["a marker with an info string inside a fence", "```\n```md\n## 1.2.3 - sample\n```\n\n## 0.9.71 - new\n\n## 0.9.70 - old\n"],
+  ])("a heading inside a code fence heads no entry: %s", (_, body) => {
+    expect(() => assertChangesHeading(`# Changes\n\n${body}`, "0.9.71")).not.toThrow();
+  });
+
+  test.each([
+    ["in the middle of a line", "Quote a heading in a ``` fence."],
+    ["indented four spaces, which is a code block", "    ```"],
+  ])("three backticks %s open no fence", (_, line) => {
+    expect(() => assertChangesHeading(`# Changes\n\n${line}\n\n## 0.9.71 - new\n\n## 0.9.70 - old\n`, "0.9.71")).not.toThrow();
+  });
+
+  test("a VERSION heading that sits only inside a code fence is no heading", () => {
+    expect(() => assertChangesHeading("# Changes\n\n```\n## 0.9.71 - new\n```\n\n## 0.9.70 - old\n", "0.9.71")).toThrow(
+      'no "## 0.9.71 - <title>" heading',
     );
   });
 });
@@ -317,7 +343,7 @@ describe("slashCommands", () => {
     for (const menu of samples) {
       let parsed;
       try {
-        parsed = Bun.YAML.parse(promptStub({ name: "b", menu }).split("---\n")[1]).description;
+        parsed = Bun.YAML.parse(promptStub({ name: "b", menu }, RUNTIMES[0]).split("---\n")[1]).description;
       } catch {}
       let accepted = true;
       try {
@@ -436,7 +462,7 @@ describe("deriveSkill", () => {
     for (const file of ["plugins/pstack/skills/teach/SKILL.md", "plugins/pstack/skills/poteto-mode/playbooks/refactoring.md"]) {
       const text = "---\nname: teach\ndescription: d\n---\n\n# Title\n\nbody\n";
       const out = deriveSkill(file, text, models, leads);
-      expect(out).toBe(text.replace("# Title\n\n", `# Title\n\n${leads.get(file)}\n\n`));
+      expect(out).toBe(text.replace("# Title\n\n", `# Title\n\n${leads.get(file).join("\n\n")}\n\n`));
       expect(deriveSkill(file, out, models, leads)).toBe(out);
     }
   });
@@ -456,17 +482,48 @@ describe("lead lines", () => {
     expect(stampLeadLine("no heading\n", "Lead.")).toBeNull();
   });
 
-  test("the Codex notes table lists its skills in row order and rejects a row without one", () => {
-    const table = (...rows) => ["| Skill | On Codex |", "|-------|----------|", ...rows, "", "after"].join("\n");
-    expect(codexNoteSkills(table("| `how` | fan-out |", "| `teach` | images |"))).toEqual(["how", "teach"]);
-    expect(() => codexNoteSkills(table("| how | fan-out |"))).toThrow("does not start with a backticked skill: | how |");
-    expect(() => codexNoteSkills("no table\n")).toThrow('"| Skill | On Codex |" table header not found');
+  test("stamping converges a duplicated lead line, one that lost a blank separator on either side, and one out of order", () => {
+    const canonical = "# X\n\nA.\n\nB.\n\nBody.\n";
+    expect(stampLeadLine("# X\n\nA.\nA.\n\nB.\n\nBody.\n", ["A.", "B."])).toBe(canonical);
+    expect(stampLeadLine("# X\nA.\n\nB.\n\nBody.\n", ["A.", "B."])).toBe(canonical);
+    expect(stampLeadLine("# X\n\nA.\n\nB.\nBody.\n", ["A.", "B."])).toBe(canonical);
+    expect(stampLeadLine("# X\nA.\nB.\nBody.\n", ["A.", "B."])).toBe(canonical);
+    expect(stampLeadLine("# X\n\nB.\n\nA.\n\nBody.\n", ["A.", "B."])).toBe(canonical);
   });
 
-  test("a prompt stub points at codex-tools.md unless its skill carries the Codex preamble", () => {
+  test("removing a lead glued to the text below it keeps the blank line that ended the paragraph above", () => {
+    expect(stampLeadLine("# X\n\nIntro.\n\nA.\n\nB.\nBody.\n", ["A.", "B."])).toBe("# X\n\nA.\n\nB.\n\nIntro.\n\nBody.\n");
+    expect(stampLeadLine("# X\n\nB.\n\nBody one.\n\nA.\nBody two.\n", ["A.", "B."])).toBe("# X\n\nA.\n\nB.\n\nBody one.\n\nBody two.\n");
+  });
+
+  test("a lead line that ends the file gains no blank line after it", () => {
+    for (const text of ["# X\n\nA.\n", "# X\n\nA."]) expect(stampLeadLine(text, "A.")).toBe(text);
+  });
+
+  test("Codex and Copilot stamp a preamble on their noted skills and Pi stamps none", () => {
+    expect(RUNTIMES.map((r) => r.name)).toEqual(["Codex", "Pi", "GitHub Copilot"]);
+    expect(codex.preamble).toBe(
+      "On Codex, read the [platform mapping](../poteto-mode/references/codex-tools.md), including its per-skill notes, before following this skill.",
+    );
+    expect(copilot.preamble).toBe(
+      "On GitHub Copilot, read the [platform mapping](../poteto-mode/references/copilot-tools.md), including its per-skill notes, before following this skill.",
+    );
+    expect(pi.preamble).toBeNull();
+    expect([...leads.values()].flat().filter((line) => line.includes("pi-tools.md"))).toEqual([]);
+  });
+
+  test("a notes table lists its skills in row order and rejects a row without one", () => {
+    const table = (...rows) => ["| Skill | On Pi |", "|-------|-------|", ...rows, "", "after"].join("\n");
+    expect(noteSkills(pi, table("| `how` | fan-out |", "| `teach` | images |"))).toEqual(["how", "teach"]);
+    expect(() => noteSkills(pi, table("| how | fan-out |"))).toThrow("does not start with a backticked skill: | how |");
+    expect(() => noteSkills(codex, "no table\n")).toThrow('"| Skill | On Codex |" table header not found');
+  });
+
+  test("a prompt stub points at its runtime's mapping file unless its skill carries that runtime's preamble", () => {
     const pointer = "through `poteto-mode/references/codex-tools.md`, including its Per-skill notes.";
-    expect(promptStub({ name: "tdd", menu: "m" }, { preamble: false })).toContain(pointer);
-    expect(promptStub({ name: "how", menu: "m" }, { preamble: true })).toBe(
+    expect(promptStub({ name: "tdd", menu: "m" }, codex, { preamble: false })).toContain(pointer);
+    expect(promptStub({ name: "tdd", menu: "m" }, pi, { preamble: false })).toContain("`poteto-mode/references/pi-tools.md`");
+    expect(promptStub({ name: "how", menu: "m" }, codex, { preamble: true })).toBe(
       "---\nname: how\ndescription: m\ndisable-model-invocation: true\n---\n\nInvoke the `pstack:how` skill and follow it.\n",
     );
   });
@@ -552,7 +609,8 @@ describe("plan, changes, apply", () => {
   };
   const repoCopy = () => {
     const dir = scratch("pstack-generate-");
-    cpSync(repoRoot, dir, { recursive: true, filter: (src) => ![".git", ".local-tools", "node_modules"].includes(basename(src)) });
+    cpSync(repoRoot, dir, { recursive: true, filter: (src) => ![".git", "node_modules"].includes(basename(src)) });
+    symlinkSync(join(repoRoot, "node_modules"), join(dir, "node_modules"));
     return dir;
   };
   const snapshot = (dir) => Object.fromEntries(walk(dir).map((path) => [path, readFileSync(path, "utf8")]));
@@ -728,13 +786,26 @@ describe("plan, changes, apply", () => {
     const root = repoCopy();
     const leadFiles = [...loadLeadLines(root)];
     expect(leadFiles.length).toBeGreaterThan(0);
-    for (const [file, line] of leadFiles) {
-      const text = readFileSync(join(root, file), "utf8");
-      writeFileSync(join(root, file), text.replace(`\n\n${line}\n`, "\n"));
-      expect(readFileSync(join(root, file), "utf8")).not.toContain(line);
+    for (const [file, lines] of leadFiles) {
+      for (const line of lines) {
+        const text = readFileSync(join(root, file), "utf8");
+        writeFileSync(join(root, file), text.replace(`\n\n${line}\n`, "\n"));
+        expect(readFileSync(join(root, file), "utf8")).not.toContain(line);
+      }
     }
     const { files } = plan(root);
     for (const [file] of leadFiles) expect(files[file]).toBe(readFileSync(join(repoRoot, file), "utf8"));
+  });
+
+  test("plan converges a duplicated lead line, so --check flags the file as stale", () => {
+    const root = repoCopy();
+    const file = "plugins/pstack/skills/how/SKILL.md";
+    const original = readFileSync(join(root, file), "utf8");
+    expect(original).toContain(`\n\n${codex.preamble}\n`);
+    writeFileSync(join(root, file), original.replace(`\n\n${codex.preamble}\n`, `\n\n${codex.preamble}\n${codex.preamble}\n`));
+    const intended = plan(root);
+    expect(intended.files[file]).toBe(original);
+    expect(changes(root, intended)).toEqual([{ kind: "write", path: file }]);
   });
 
   test("two producers on one path compose", () => {
@@ -749,7 +820,7 @@ describe("plan, changes, apply", () => {
     writeFileSync(
       join(root, skill),
       text(skill)
-        .replace(`\n\n${leads.get(skill)}\n`, "\n")
+        .replace(`\n\n${leads.get(skill)[0]}\n`, "\n")
         .replace(/^- how explorer: .*$/m, "- how explorer: stale"),
     );
     const { files } = plan(root);
@@ -766,10 +837,16 @@ describe("plan, changes, apply", () => {
     }
   });
 
+  test.each(RUNTIMES.map((runtime) => [runtime.name, runtime]))("a %s per-skill note for a skill that does not exist fails", (_, runtime) => {
+    const root = repoCopy();
+    const tools = join(root, runtime.tools);
+    writeFileSync(tools, readFileSync(tools, "utf8").replace(/^\| `why` \|/m, "| `gone` |"));
+    expect(() => loadLeadLines(root)).toThrow(`${runtime.tools}: per-skill note for "gone", which has no SKILL.md`);
+  });
+
   test("problems reports a lead line in a file that does not own it", () => {
     const root = repoCopy();
-    const [, preamble] = [...loadLeadLines(root)].find(([, line]) => line.startsWith("On Codex"));
-    append(root, "plugins/pstack/skills/tdd/SKILL.md", `\n${preamble}\n`);
+    append(root, "plugins/pstack/skills/tdd/SKILL.md", `\n${codex.preamble}\n`);
     const codexTools = "plugins/pstack/skills/poteto-mode/references/codex-tools.md";
     writeFileSync(join(root, codexTools), readFileSync(join(root, codexTools), "utf8").replace(/^\| `why` \|.*\n/m, ""));
     const failures = problems(root).filter((f) => f.startsWith("generator-owned lead lines"));
@@ -830,6 +907,15 @@ describe("plan, changes, apply", () => {
     ]);
   });
 
+  test("problems reports an agent whose frontmatter name is not its file name", () => {
+    const root = repoCopy();
+    const agent = "plugins/pstack/agents/comment-sicko.md";
+    writeFileSync(join(root, agent), readFileSync(join(root, agent), "utf8").replace(/^name: .*$/m, "name: sicko"));
+    expect(problems(root)).toEqual([
+      expect.stringContaining('./agents/comment-sicko.md: frontmatter name "sicko" != file name "comment-sicko"'),
+    ]);
+  });
+
   test("problems reports a malformed Codex manifest as one failure and still runs the other checks", () => {
     const root = repoCopy();
     const manifest = "plugins/pstack/.codex-plugin/plugin.json";
@@ -841,5 +927,36 @@ describe("plan, changes, apply", () => {
         expect.stringContaining("plugins/pstack/skills/tdd/SKILL.md:"),
       ]);
     }
+  });
+
+  test("problems checks the Copilot manifest and the hooks file it names", () => {
+    const root = repoCopy();
+    const manifest = "plugins/pstack/.github/plugin/plugin.json";
+    const hooks = "plugins/pstack/hooks/copilot-hooks.json";
+    writeFileSync(join(root, hooks), readFileSync(join(root, hooks), "utf8").replace("hooks/pre-tool-use.sh", "hooks/gone.sh"));
+    expect(problems(root)).toEqual([expect.stringContaining("hooks/gone.sh does not exist")]);
+    const text = readFileSync(join(root, manifest), "utf8");
+    writeFileSync(join(root, manifest), text.replace('"name": "pstack-mod"', '"name": "other"'));
+    expect(problems(root)).toEqual([
+      expect.stringContaining(`${manifest}: name "other"`),
+      expect.stringContaining("hooks/gone.sh does not exist"),
+    ]);
+  });
+
+  test("problems reports a hook path that resolves outside the plugin, through .. or through a symlink", () => {
+    const root = repoCopy();
+    const hooks = "plugins/pstack/hooks/copilot-hooks.json";
+    const text = readFileSync(join(root, hooks), "utf8");
+    writeFileSync(join(root, hooks), text.replace("hooks/session-start.sh", "../../tools/generate.mjs"));
+    expect(problems(root)).toEqual([expect.stringContaining("../../tools/generate.mjs does not exist in the plugin")]);
+    const outside = join(scratch("pstack-outside-"), "start.sh");
+    writeFileSync(outside, "#!/bin/sh\n", { mode: 0o755 });
+    symlinkSync(outside, join(root, "plugins/pstack/hooks/linked.sh"));
+    writeFileSync(join(root, hooks), text.replace("hooks/session-start.sh", "hooks/linked.sh"));
+    expect(problems(root)).toEqual([expect.stringContaining("hooks/linked.sh does not exist in the plugin")]);
+  });
+
+  test("problems reports a root with no plugin directory, down to the last check, and does not throw", () => {
+    expect(problems(scratch("pstack-empty-"))).toContainEqual(expect.stringContaining("plugins/pstack/hooks/hooks.json"));
   });
 });

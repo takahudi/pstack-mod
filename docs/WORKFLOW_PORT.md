@@ -80,3 +80,13 @@ Japanese is the default repository README at `README.md`, with an English versio
 Bilingual README validation passed 83 related generator, documentation-fact and identity tests, generation checks, Markdown lint and offline local links. The existing Windows and Linux routing verification remains recorded above. The first push completed, and GitHub's default README is the Japanese version.
 
 Next: verify pstack-mod in fresh interactive host sessions before migration; choose upstream sync automation; then refine vendor-specific model setup and phase guidance.
+
+## Upstream update, 2026-10-10
+
+The update branch imports Michael Denyer’s port `24c96b1eed2b07c62d0f88f0764a2954ed1d911a` (0.9.81), including Cursor pstack `df58112`. The personal release is 0.1.2, with 58 skills (34 public workflows and 24 principles). `tools/port-upstream.json` records the host-port revision; Cursor components continue to use `tools/upstream.json` and `tools/sync.mjs`. Port import and direct Cursor pin confirmation are separate commits.
+
+The runtime registry now includes the upstream Pi and GitHub Copilot adapters. Their manifests, dispatch names, and model-sheet filenames use the personal identity. Claude Code and Codex keep the read-only Node launchers, explicit opt-in routing, active-vendor policy, and Codex’s one authoritative model-sheet pointer. Copilot’s POSIX hook and Pi’s extension retain their upstream behavior; their interactive hosts have not been verified for this personal package. Upstream live verification records are historical evidence, not new pstack-mod host tests.
+
+Verification: Windows generation and the 50 identity/routing tests pass; the worktree audit passes 117 tests and skips 20 platform fixtures, using CI’s 30-second timeout and handling an absent optional du command. Isolated Codex discovery installs 58 skills and 250 matching source files. Claude manifest validation passes. Linux’s full suite passes 1,128 tests and skips 32 live/runtime fixtures. Vendored script typechecking, all 234 tests, and formatting pass. Pi 1.0.0 typechecking, catalog, and child-startup checks pass without model calls. Both pinned component dry runs report all forks declared. No installed plugin or user configuration was replaced; fresh interactive host discovery and migration remain pending.
+
+Direct Cursor confirmation pins pstack to `df581122cde17e6e27686b5a448bde23e4ad4318` and cursor-team-kit to `2b8ae2ee306f823d54879d3da7f8496b73c31d5d`. Both sync runs complete without file writes or conflicts. Markdown lint, offline links, actionlint, ShellCheck, and zizmor also pass.

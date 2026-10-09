@@ -2,11 +2,13 @@
 
 This file is the release changelog, with one `## <version> - <title>` entry per release, newest first. The Cursor-to-Claude rewrite rules live in [`tools/substitutions.json`](tools/substitutions.json), and the [sync boundary](CONTRIBUTING.md#the-sync-boundary) in `CONTRIBUTING.md` defines how a change to upstream's skill content is declared.
 
-## 0.1.2 - sync the host port to 0.9.81
+## 0.1.2 - sync the host port and Cursor sources
 
 Upstream port: import Michael Denyer’s `24c96b1` (0.9.81), including Cursor pstack `df58112`, new benchmark-checklist, correct, and poteto-help skills, performance/design guidance, transcript and worktree audit fixes, PR watcher safeguards, sync validation, and the upstream Pi and GitHub Copilot adapters. Historical upstream release notes below retain their version numbers.
 
 Personal adaptations: retain the pstack-mod namespace, Codex’s authoritative model-sheet pointer, active-vendor model policy, and the Node SessionStart launchers with routing disabled unless explicitly enabled. The new runtime packages use the personal identity. The installed user plugin and configuration are untouched.
+
+Cursor source confirmation: `tools/sync.mjs` advances the pstack pin to full revision `df581122cde17e6e27686b5a448bde23e4ad4318` and cursor-team-kit to `2b8ae2ee306f823d54879d3da7f8496b73c31d5d`. The host-port import already includes the latest pstack content; the team-kit range changes only its excluded plugin manifest. Direct sync writes no component files, retains the declared forks, and reports no conflicts.
 
 ## 0.9.81 - inspect terminal PRs and recover orphaned Pi agents
 

@@ -7,7 +7,11 @@ description: Configure which models pstack uses per role. Detects available mode
 
 On Codex, read the [platform mapping](../poteto-mode/references/codex-tools.md), including its per-skill notes, before following this skill.
 
+On GitHub Copilot, read the [platform mapping](../poteto-mode/references/copilot-tools.md), including its per-skill notes, before following this skill.
+
 For a request that changes only automatic routing, resolve the current runtime's sheet using [Other runtimes](#other-runtimes), read it if present, and update only the `session hook` line to the requested on/off value. Preserve all model rows, verify the saved choice, report the path and host trust requirement, then stop. Model detection and role confirmation apply to model configuration requests.
+
+On GitHub Copilot, follow [the Copilot setup](copilot.md) in place of steps 1, 3, 4, and 7 and step 6's header.
 
 On another runtime, read [Other runtimes](#other-runtimes) below for where the sheet lives and how it loads; the steps are the same.
 
@@ -68,11 +72,11 @@ why investigators: opus
 why synthesizer: opus
 reflect tooling: opus
 reflect judgment, divergent, synthesizer: opus
-arena runners: opus, fable, sonnet
-arena cross-judge pool: opus, fable, sonnet
+arena runners: opus, fable, sonnet, haiku
+arena cross-judge pool: opus, fable, sonnet, haiku
 swarm workers: opus
-architect runners: opus, fable, sonnet
-interrogate reviewers: opus, fable, sonnet
+architect runners: opus, fable, sonnet, haiku
+interrogate reviewers: opus, fable, sonnet, haiku
 
 default effort: session
 session hook: off
@@ -88,9 +92,13 @@ On Codex, keep all role values and `default effort` in the sheet as the single s
 
 Tell the user where the override was written, how its model rows load, and whether the plugin hook is on. Re-running this skill updates the override sheet.
 
+### 9. Offer a verification skill (optional)
+
+Check whether the project has a way to drive the real app for proof (a project `verify` or `verify-*` skill, or an existing harness). If not, offer once: "want a project-local verification skill, so agents can drive the app the way a user does and prove changes work? I can generate one with /create-verification-skill." On yes, invoke [`/create-verification-skill`](../create-verification-skill/SKILL.md). On no, move on without pushing.
+
 ## Other runtimes
 
-The role lines are the same everywhere. What differs is the sheet path, how the runtime loads it, and how you list models. Detect models with the runtime's own tool and never write a slug you have not seen listed. A runtime whose subagent call has no model parameter still gets the sheet, as the record of the user's choice, and applies it where it can. The `session hook` line applies to the Claude Code and Codex plugins.
+The role lines are the same everywhere. What differs is the sheet path, how the runtime loads it, and how you list models. Detect models with the runtime's own tool and never write a slug you have not seen listed. A runtime whose subagent call has no model parameter still gets the sheet, as the record of the user's choice, and applies it where it can. The `session hook` line applies to the Claude Code, Codex, and GitHub Copilot plugins and to the pstack Pi extension.
 
 | Runtime | Sheet | Load | List models | Status |
 | --- | --- | --- | --- | --- |
@@ -98,6 +106,8 @@ The role lines are the same everywhere. What differs is the sheet path, how the 
 | Codex | `<codex-home>/pstack-mod-models.md` | pointer in `<codex-home>/AGENTS.md` requires reading the sheet before role dispatch; hook setting: read by the plugin | your configured Codex models, see [codex-tools.md](../poteto-mode/references/codex-tools.md#model-names) | launcher and isolated CLI install checked; pstack-mod interactive setup and discovery pending |
 | opencode | `~/.config/opencode/pstack-mod-models.md` | add the path to the `instructions` array in `opencode.json` | the `models` slash command in the session | from published docs, no live session |
 | Gemini CLI | `~/.gemini/pstack-mod-models.md` | `@~/.gemini/pstack-mod-models.md` in `~/.gemini/GEMINI.md` | the `model` slash command in the session | from published docs, no live session |
+| Pi | `pstack-mod-models.md` in the Pi agent directory, `$PI_CODING_AGENT_DIR` or `~/.pi/agent` | read by the pstack Pi extension, model rows and hook setting both; no include line | `pi --list-models`, see [pi-tools.md](../poteto-mode/references/pi-tools.md#model-names) and its `setup-pstack` note | extension contract tested offline; live results in the repository's `docs/pi-equivalence.md` |
+| GitHub Copilot (CLI and app) | `${COPILOT_HOME:-~/.copilot}/pstack-mod-models.md` | the plugin hook checks it and injects its role lines at session start; skills-only installs read it with `view` | the `task` tool's `model` enum, see [copilot-tools.md](../poteto-mode/references/copilot-tools.md#model-names) | hook contract tested; CLI install smoke-tested |
 | Prime Agent | no documented sheet path; Prime's configuration chooses models | | | no live session |
 
 ## Models
@@ -105,7 +115,7 @@ The role lines are the same everywhere. What differs is the sheet path, how the 
 Stamped from `plugins/pstack/models.json` (edit there, rerun `tools/generate.mjs`).
 
 - Available Claude models: `opus`, `fable`, `sonnet`, `haiku`
-- Default panel: `opus`, `fable`, `sonnet`
+- Default panel: `opus`, `fable`, `sonnet`, `haiku`
 - Reasoning effort levels: `low`, `medium`, `high`, `xhigh`, `max`
 - Default reasoning effort: `session`
 - Single-role default: `opus`

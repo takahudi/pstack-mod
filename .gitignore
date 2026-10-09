@@ -17,3 +17,9 @@ tools/ci/node_modules/
 
 # bun deps for the vendored poteto-mode scripts (bootstrap.ts installs them on first run)
 plugins/pstack/skills/poteto-mode/scripts/node_modules/
+
+# bun installs the typebox peer for the Pi extension tests
+/node_modules/
+
+# Lake build output for the Lean models
+/lean/.lake/

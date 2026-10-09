@@ -2,7 +2,7 @@
   "name": "pstack-mod",
   "displayName": "pstack-mod",
   "icon": "./assets/pstack-icon.png",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "pstack-mod is takahudi's personal pstack port for Codex and Claude Code. Original pstack by Lauren Tan; host adaptation based on Michael Denyer's port. Design, implementation, verification and review workflows with explicit namespaced invocation and optional routing.",
   "author": {
     "name": "takahudi",

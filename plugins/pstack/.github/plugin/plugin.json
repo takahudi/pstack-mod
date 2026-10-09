@@ -1,0 +1,32 @@
+{
+  "name": "pstack-mod",
+  "displayName": "pstack (GitHub Copilot port)",
+  "version": "0.1.2",
+  "description": "If you want to go fast, go deep first. pstack helps you write less, but higher quality code. rigorous agent workflows you can parallelize with confidence. Ported from cursor/plugins/pstack to GitHub Copilot CLI and app. Original pstack by Lauren Tan (poteto).",
+  "author": {
+    "name": "takahudi",
+    "url": "https://github.com/takahudi"
+  },
+  "homepage": "https://github.com/takahudi/pstack-mod",
+  "repository": "https://github.com/takahudi/pstack-mod",
+  "license": "MIT",
+  "keywords": [
+    "pstack",
+    "poteto-mode",
+    "workflow",
+    "principles",
+    "agent-style",
+    "subagents",
+    "unslop",
+    "claude-code",
+    "skills",
+    "tdd",
+    "code-review",
+    "parallel-agents",
+    "codex",
+    "opencode",
+    "gemini-cli",
+    "prime-agent"
+  ],
+  "hooks": "hooks/copilot-hooks.json"
+}

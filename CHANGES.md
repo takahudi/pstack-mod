@@ -8,6 +8,8 @@ Import Michael Denyer's port `058a348` (0.9.83) and Cursor pstack `997ffc7` (0.1
 
 Keep pstack-mod's namespace, active-vendor policy, authoritative Codex model sheet, and optional Windows-capable Node routing hooks. The new Agent Plugins v1 manifest uses the personal identity and repository, and thermos attribution is included in both plugin and skills-only packages.
 
+Direct Cursor confirmation records pstack at `997ffc7fe26bdaa6478a14e7f5b8d5f9ed747102`, cursor-team-kit at `2b8ae2ee306f823d54879d3da7f8496b73c31d5d`, and thermos at `118e73b0e196e4d49d5aade7ce6dd8985a621f68`. All three sync runs complete without component writes or conflicts and retain the declared forks.
+
 ## 0.9.83 - sync to upstream 997ffc7 (v0.15.21): adds /ketchup
 
 The upstream pin moves from `df58112` to `997ffc7`, upstream v0.15.21, 15 commits. The `/ketchup` skill catches the user up on everything in the chat since their last message, with a before-and-after visual for each action item, and `/poteto-help` routes to it. Upstream distilled the prompts of most skills to cut tokens, and the port takes every distilled text. `poteto-mode` tells the chat that receives `/poteto-mode` to run the playbook itself and spawn `poteto-agent` only as a delegate, which the agent's description and the generated effort agents repeat, and it names where the bundled leaf skills live relative to its own file. `create-verification-skill` reads "ready" as usable from an empty data dir, and `unslop`'s description drops "Must always apply." @Tradie-AI-2000 asked for this sync in [#260](https://github.com/michael-denyer/pstack-claude/issues/260).

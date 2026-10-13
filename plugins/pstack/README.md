@@ -4,10 +4,16 @@ Lauren Tan's [pstack](https://github.com/cursor/plugins/tree/main/pstack) is an 
 
 Tell `poteto-mode` your goal and it invokes the workflow that fits: reproduce and root-cause a bug, sketch a design with `architect`, race candidates in `arena`, review a diff with `interrogate`, cut prose with `unslop`. It keeps code concise, simple, and verified, and it reports what it checked.
 
+## Install on Claude Code
+
+```text
+/plugin install pstack-mod --marketplace takahudi/pstack-mod
+```
+
 ## What it contains
 
 - Skills: Markdown instructions the agent reads. Public ones appear as `/pstack-mod:<name>` slash commands.
-- Agents: `pstack-mod:poteto-agent` and `pstack-mod:comment-sicko`, plus one agent per reasoning-effort level.
+- Agents: workflow delegates, comment review, two thermos reviewers, and one agent per reasoning-effort level.
 - An optional Node.js SessionStart hook, disabled until your runtime's `pstack-mod-models.md` has a single `session hook: on` line.
 - Local scripts for watching and shipping pull requests, orchestrating multi-phase plans, and auditing worktrees.
 
@@ -17,10 +23,10 @@ pstack has no server or telemetry. Anything its skills ask your agent to read, i
 
 ## Links
 
-- [Skills, slash commands, runtime setup, and model configuration](https://github.com/michael-denyer/pstack-claude/blob/main/docs/reference.md)
-- [Issues and support](https://github.com/michael-denyer/pstack-claude/issues)
-- [Security policy](https://github.com/michael-denyer/pstack-claude/blob/main/SECURITY.md)
+- [Skills, slash commands, runtime setup, and model configuration](https://github.com/takahudi/pstack-mod/blob/main/docs/reference.md)
+- [Issues and support](https://github.com/takahudi/pstack-mod/issues)
+- [Security policy](https://github.com/takahudi/pstack-mod/blob/main/SECURITY.md)
 
 ## License
 
-MIT for this port and its additions, © 2026 Michael Denyer. Original pstack © 2026 Lauren Tan; imported cursor-team-kit skills © 2026 Cursor. See [NOTICE.md](https://github.com/michael-denyer/pstack-claude/blob/main/NOTICE.md).
+MIT for this port and its additions, © 2026 Michael Denyer. Original pstack © 2026 Lauren Tan; imported cursor-team-kit and thermos skills © 2026 Cursor. See [NOTICE.md](https://github.com/takahudi/pstack-mod/blob/main/NOTICE.md).

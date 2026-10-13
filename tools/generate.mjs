@@ -74,6 +74,7 @@ const PROMPT_RUNTIMES = RUNTIMES.filter((runtime) => runtime.prompts);
 const VERSIONED_MANIFESTS = [
   ".claude-plugin/marketplace.json",
   `${PLUGIN}/.claude-plugin/plugin.json`,
+  `${PLUGIN}/plugin.json`,
   ...RUNTIMES.map((runtime) => runtime.manifest),
 ];
 
@@ -87,6 +88,7 @@ export const PORTABLE_ASSETS = [
     source: "LICENSE-cursor-team-kit",
     target: "poteto-mode/references/licenses/LICENSE-cursor-team-kit",
   },
+  { source: "LICENSE-thermos", target: "poteto-mode/references/licenses/LICENSE-thermos" },
   { source: "NOTICE-skills.md", target: "poteto-mode/references/licenses/NOTICE.md" },
 ];
 
@@ -697,7 +699,7 @@ export function effortSection(levels, defaultEffort) {
 // The effort agents: one general-purpose worker and one poteto-agent per level.
 // The poteto variants carry poteto-agent's body. Their descriptions name
 // pstack:poteto-agent instead of copying its routing contract, so only the
-// base agent reads as the routing target for /poteto-mode. A description is
+// base agent reads as the delegate /poteto-mode runs spawn. A description is
 // written unquoted, so it must not open with a backtick: strict YAML rejects it.
 export function effortAgents(levels, potetoAgent) {
   const { body } = parseFrontmatter(potetoAgent);
@@ -926,7 +928,7 @@ export function validateRoutingHooks(claude, codex) {
 
 export function validateIdentity(root) {
   const identity = loadIdentity(root);
-  for (const file of ["plugins/pstack/.claude-plugin/plugin.json", "plugins/pstack/.codex-plugin/plugin.json",
+  for (const file of ["plugins/pstack/plugin.json", "plugins/pstack/.claude-plugin/plugin.json", "plugins/pstack/.codex-plugin/plugin.json",
     ".claude-plugin/marketplace.json", ".agents/plugins/marketplace.json"]) {
     const value = JSON.parse(readFileSync(join(root, file), "utf8"));
     if (value.name !== identity.name || (value.plugins && (value.plugins.length !== 1 || value.plugins[0].name !== identity.name))) {
@@ -1033,6 +1035,7 @@ export function plan(root, models) {
     if (text !== current(rel)) files[rel] = text;
   }
   for (const [file, kind] of [
+    [`${PLUGIN}/plugin.json`, "agent-plugins"],
     [`${PLUGIN}/.claude-plugin/plugin.json`, "claude"],
     [`${PLUGIN}/.codex-plugin/plugin.json`, "codex"],
     [".claude-plugin/marketplace.json", "claude-marketplace"],

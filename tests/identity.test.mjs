@@ -44,6 +44,12 @@ describe("personal plugin identity", () => {
       const notices = ["LICENSE", "LICENSE-cursor-team-kit", "NOTICE.md", "CHANGES.md"].map((p) => [p, readFileSync(join(copy, p), "utf8")]);
       apply(copy, plan(copy), {log: () => {}});
       expect(() => validateIdentity(copy)).not.toThrow();
+      const manifestPath = join(copy, "plugins/pstack/plugin.json");
+      const manifest = JSON.parse(readFileSync(manifestPath, "utf8"));
+      expect(manifest.name).toBe("takahudi-next");
+      writeFileSync(manifestPath, JSON.stringify({...manifest, name: "pstack"}));
+      expect(() => validateIdentity(copy)).toThrow("plugins/pstack/plugin.json: identity does not match takahudi-next");
+      apply(copy, plan(copy), {log: () => {}});
       expect(changes(copy, plan(copy))).toEqual([]);
       expect(readFileSync(join(copy, "plugins/pstack/skills/architect/SKILL.md"), "utf8")).not.toContain("pstack-mod:");
       expect(readFileSync(join(copy, "plugins/pstack/.codex-plugin/prompts/tdd.md"), "utf8")).toContain("takahudi-next:tdd");

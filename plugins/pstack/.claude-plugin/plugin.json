@@ -2,7 +2,7 @@
   "name": "pstack-mod",
   "displayName": "pstack-mod",
   "icon": "./assets/pstack-icon.png",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "pstack-mod is takahudi's personal pstack port for Codex and Claude Code. Original pstack by Lauren Tan; host adaptation based on Michael Denyer's port. Design, implementation, verification and review workflows with explicit namespaced invocation and optional routing.",
   "author": {
     "name": "takahudi",
@@ -31,6 +31,8 @@
   "agents": [
     "./agents/comment-sicko.md",
     "./agents/poteto-agent.md",
+    "./agents/thermo-nuclear-code-quality-review-subagent.md",
+    "./agents/thermo-nuclear-review-subagent.md",
     "./effort-agents/effort-high.md",
     "./effort-agents/effort-low.md",
     "./effort-agents/effort-max.md",

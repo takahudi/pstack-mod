@@ -74,4 +74,4 @@ pstack-mod 自体にはサーバーや利用状況の送信機能はありませ
 
 ## ライセンス
 
-この移植版は、上流の [MIT ライセンス](LICENSE)と著作権表記を保持しています。Michael Denyer の移植版は © 2026 Michael Denyer、元の pstack は © 2026 Lauren Tan、取り込んだ cursor-team-kit のスキルは © 2026 Cursor です。[LICENSE-cursor-team-kit](LICENSE-cursor-team-kit) と [NOTICE.md](NOTICE.md) も参照してください。
+この移植版は、上流の [MIT ライセンス](LICENSE)と著作権表記を保持しています。Michael Denyer の移植版は © 2026 Michael Denyer、元の pstack は © 2026 Lauren Tan、取り込んだ cursor-team-kit と thermos のスキルは © 2026 Cursor です。[LICENSE-cursor-team-kit](LICENSE-cursor-team-kit)、[LICENSE-thermos](LICENSE-thermos)、[NOTICE.md](NOTICE.md) も参照してください。

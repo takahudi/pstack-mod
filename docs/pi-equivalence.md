@@ -1,9 +1,8 @@
 # Pi equivalence
 
-This historical verification record was imported from Michael Denyer’s port at 0.9.81. Interactive provider checks were not rerun for pstack-mod. Current local offline checks are recorded in [the workflow handoff](WORKFLOW_PORT.md#upstream-update-2026-10-10).
+This historical verification record was imported from Michael Denyer's port and updated with 0.9.83. Interactive provider checks were not rerun for pstack-mod. Current local offline checks are recorded in [the workflow handoff](WORKFLOW_PORT.md).
 
-
-This table lists every Claude Code mechanism the pstack plugin depends on, found by scanning `plugins/pstack/` for tool names, agent fields, hooks, paths, bundled skills, CLIs, and model names. Each row says how Pi 1.0 provides the same behavior and what proves it. `tests/pi-equivalence.test.mjs` fails when a row lacks a valid status, when an `extension` or `script` row names a test that does not exist, or when a `difference` row gives no reason.
+This table lists every Claude Code mechanism the pstack plugin depends on, found by scanning `plugins/pstack/` for tool names, agent fields, hooks, paths, bundled skills, CLIs, and model names. Each row says how Pi 1.1 provides the same behavior and what proves it. `tests/pi-equivalence.test.mjs` fails when a row lacks a valid status, when an `extension` or `script` row names a test that does not exist, or when a `difference` row gives no reason.
 
 Statuses:
 

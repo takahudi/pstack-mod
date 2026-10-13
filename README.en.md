@@ -74,4 +74,4 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the checks and where a change belongs
 
 ## License
 
-This adaptation preserves the [MIT license](LICENSE) and upstream attribution. Michael Denyer's port is © 2026 Michael Denyer. Original pstack is © 2026 Lauren Tan; imported cursor-team-kit skills are © 2026 Cursor. See [LICENSE-cursor-team-kit](LICENSE-cursor-team-kit) and [NOTICE.md](NOTICE.md).
+This adaptation preserves the [MIT license](LICENSE) and upstream attribution. Michael Denyer's port is © 2026 Michael Denyer. Original pstack is © 2026 Lauren Tan; imported cursor-team-kit and thermos skills are © 2026 Cursor. See [LICENSE-cursor-team-kit](LICENSE-cursor-team-kit), [LICENSE-thermos](LICENSE-thermos), and [NOTICE.md](NOTICE.md).
